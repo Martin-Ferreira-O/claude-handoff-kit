@@ -13,9 +13,13 @@ específica para Claude/Opus como autor del spec.
 ## El ciclo
 
 ```
-plan (Opus) → /handoff → /resume → /implement → /code-review
+plan (Opus) → /clarify → /handoff → /resume → /implement → /code-review
 ```
 
+- **/clarify** — Opus entrevista al usuario (`AskUserQuestion`) sobre las partes
+  difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas en el
+  Goal/Non-goals del plan **antes** del handoff. Es **opcional**: si el cambio
+  cabe en una sola frase, saltá `/clarify` y `/handoff` y hacelo directo.
 - **/handoff** — Opus vuelca contexto + spec en `docs/handoff/<slug>/`
   (CONTEXT, PLAN, PROGRESS, DECISIONS) y registra el slug en `INDEX.md`.
 - **/resume** — reconstruye contexto y hace el briefing; **no implementa**.
