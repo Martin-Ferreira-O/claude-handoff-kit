@@ -48,12 +48,18 @@ Header banner at the top of all four files (substitute real values):
 > Handoff doc for task `<slug>`. Author: <your model, e.g. Claude Opus 4.7>. Updated: <YYYY-MM-DD HH:MM>.
 > IMPLEMENTING AGENT: read CONTEXT.md → PLAN.md → PROGRESS.md → DECISIONS.md before starting.
 > Update PROGRESS.md after every meaningful change, and record any deviation from PLAN.md in DECISIONS.md.
+> Spec written by <planner model> against commit `<sha>` on branch `<branch>`; source plan: `~/.claude/plans/<...>.md`. If HEAD has moved far past this, reconcile before trusting the spec.
 ```
+
+The 4th line is **provenance/freshness**: it pins the planner model, the exact
+commit the spec was written against, and the source-plan path. A recalled summary
+reflects one moment in time — making that moment explicit lets the implementer (and
+`/resume`) detect "spec written N commits ago" drift instead of trusting a stale map.
 
 ### CONTEXT.md — orientation
 - **Task**: one-paragraph what + why.
 - **Project area**: which apps/modules/dirs this touches.
-- **Read first**: the handful of files (`path:line`) the implementer should open before coding.
+- **Read first**: the handful of files (`path:line`) the implementer should open before coding. Add the standing instruction: *open these files and confirm they still match this spec before trusting any summary below* — re-derivation from the code beats recall from a (possibly stale) handoff.
 - **Setup / run / test**: the exact commands, using `.venv/bin/python ...` per repo rule (e.g. `.venv/bin/python manage.py test <app>`).
 - **Conventions that matter here**: relevant rules from CLAUDE.md/AGENTS.md (service layer, UUID PKs, Spanish user-facing text, CLP integers, etc.).
 
@@ -61,7 +67,14 @@ Header banner at the top of all four files (substitute real values):
 - **Goal** and **non-goals / scope**.
 - **Source plan**: link the `~/.claude/plans/<...>.md` path.
 - **Ordered steps**, each concrete enough to execute.
-- **Acceptance criteria** — how we know it's done.
+- **Verification** (mandatory, not prose): the exact copy-pasteable command(s)
+  the implementer runs to prove the work is done, plus the **observable pass
+  signal** for each (e.g. `` `.venv/bin/python manage.py test billing` → `OK`, 0
+  failures ``). End with one end-to-end check that proves the feature works, not
+  just that units pass. This block is load-bearing — `/implement` verifies against
+  it and the optional Stop hook (see `docs/hooks.md`) keys off it. If a step
+  genuinely cannot be verified by command, say so explicitly and give the manual
+  check instead.
 - Treat this as read-mostly; the implementer should not silently diverge.
 
 ### PROGRESS.md — live status (implementer updates this)
