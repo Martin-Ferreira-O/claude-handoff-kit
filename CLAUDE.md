@@ -24,7 +24,11 @@ plan (Opus) → /clarify → /handoff → /resume → /implement → /code-revie
   (CONTEXT, PLAN, PROGRESS, DECISIONS) y registra el slug en `INDEX.md`.
 - **/resume** — reconstruye contexto y hace el briefing; **no implementa**.
 - **/implement** — ejecuta `PLAN.md` paso a paso, con un commit atómico por
-  paso verificado (código + actualizaciones de PROGRESS/DECISIONS juntos).
+  paso verificado (código + actualizaciones de PROGRESS/DECISIONS juntos). Antes
+  del reporte final corre un **gate de review contra `PLAN.md`** (skill
+  `/code-review` o subagente, en contexto fresco): "¿está implementado cada
+  requisito y pasa el comando de **Verification**? Reportá gaps, no preferencias
+  de estilo." El resultado queda en una línea de PROGRESS.
 
 ## Roles (no cruzar las líneas)
 

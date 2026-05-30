@@ -74,9 +74,27 @@ Target handoff (optional slug): `$ARGUMENTS`
    duplicate. This update rides along with the next step's commit (or a final
    bookkeeping commit if there are no more steps).
 
-9. **Report.** Summarize:
+9. **Review against the spec (fresh-context gate).** Before reporting done — once
+   the PLAN steps you set out to finish are committed — run an adversarial review
+   in a fresh context that sees only the diff and `PLAN.md`. Use the bundled
+   `/code-review` skill or spawn a subagent with this prompt shape:
+
+   > Review this diff **against `PLAN.md`**. Verify every requirement is
+   > implemented and the **Verification** command(s) in PLAN actually pass.
+   > **Report gaps against the spec, not style preferences** — do not suggest
+   > scope the plan didn't ask for.
+
+   The "report gaps, not style" framing is deliberate: a gap-hungry reviewer
+   otherwise drives over-engineering past the spec. Record the outcome as a
+   PROGRESS work-log line (`… — review against PLAN: <pass / N gaps>`). If the
+   review finds a real gap in committed work, fix it as its own verified+committed
+   step; if it surfaces something the spec itself got wrong, log it under
+   *Open questions for the spec author* in DECISIONS.md rather than redesigning.
+
+10. **Report.** Summarize:
    - **Done this session**: steps completed, with verification result and the
      commit hash for each.
+   - **Review**: the spec-review outcome from step 9 (pass, or the gaps found).
    - **Still pending**: the next unchecked PLAN step.
    - **Decisions / open questions**: anything added to DECISIONS.md the author
      should review.
