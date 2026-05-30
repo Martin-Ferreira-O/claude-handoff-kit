@@ -66,6 +66,12 @@ plan (Opus) → /clarify → /handoff → /resume → /implement → /code-revie
 - Cada comando en `.claude/commands/` lleva frontmatter: `description`,
   `argument-hint`, `allowed-tools`.
 - `allowed-tools` mínimo necesario: read-mostly para `handoff`/`resume`,
-  `Write`/`Edit`/`Bash` para `implement`.
+  `Write`/`Edit`/`Bash` para `implement`. El `Bash` sin restringir de
+  `implement.md` es **la única concesión amplia intencional**: implementar de
+  verdad necesita bash arbitrario; el resto de los comandos van acotados.
 - Slugs en kebab-case; un handoff por slug — se **actualiza**, no se duplica.
+- **Tamaño del slug:** acotá cada slug a lo que entra en una sola ventana de
+  contexto del implementador. Si el plan es grande, partilo en varios slugs en
+  paralelo (el kit ya soporta slugs paralelos) en lugar de un slug gigante que
+  pudre el contexto del implementador a mitad de camino.
 - Los cuatro archivos del handoff abren con el banner de cabecera.
