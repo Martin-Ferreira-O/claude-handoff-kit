@@ -5,6 +5,12 @@
 # DECISIONS — harden-handoff-kit
 
 ## Decisions taken
+- **(implementer, 2026-05-29) Step 4 also edited `implement.md`, not just the
+  files in its header.** PLAN step 4's header lists "resume.md + AGENTS.md", but
+  its body explicitly says to add the cross-artifact consistency check to "the
+  reconcile step of `/resume` *and* `/implement`". I followed the body and added
+  the check to implement.md's step 3 too. Not a design change — the spec called
+  for it; flagging only because the header undercounts the touched files.
 - **(implementer, 2026-05-29) Committed the handoff package into git with step 1.**
   The planner created `docs/handoff/harden-handoff-kit/` but left it untracked.
   Since the package *is* the live spec being implemented (and CONTEXT calls this

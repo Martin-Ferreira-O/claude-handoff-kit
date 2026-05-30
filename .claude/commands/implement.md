@@ -26,10 +26,13 @@ Target handoff (optional slug): `$ARGUMENTS`
    PROGRESS.md → DECISIONS.md. Open the **Read first** files from CONTEXT.md
    before touching anything.
 
-3. **Reconcile with the repo.** Run `git status`, `git log --oneline -10`, and
-   `git diff --stat` to find work done since PROGRESS.md was last updated and any
-   drift between the plan and the actual tree. If the spec is already fully done,
-   say so and stop.
+3. **Reconcile with the repo, and check the package against itself.** Run
+   `git status`, `git log --oneline -10`, and `git diff --stat` to find work done
+   since PROGRESS.md was last updated and any **spec-vs-tree** drift. Then run the
+   tiny **cross-artifact consistency check**: flag PROGRESS checkboxes that don't
+   match PLAN steps, DECISIONS that contradict PLAN, and a provenance SHA far
+   behind `HEAD`. If the spec is already fully done, say so and stop; if the
+   package is internally inconsistent, surface it before implementing on a bad map.
 
 4. **Check for blockers first.** If `DECISIONS.md` has unresolved *Open questions
    for the spec author* that block the next step, surface them and stop — do not

@@ -23,15 +23,30 @@ Target handoff (optional slug): `$ARGUMENTS`
 2. **Read all four files in order**: CONTEXT.md → PLAN.md → PROGRESS.md →
    DECISIONS.md.
 
-3. **Reconcile with the repo.** Run `git status`, `git log --oneline -10`, and
-   `git diff --stat` to detect work done since PROGRESS.md was last updated, or
-   drift between the plan and the actual tree. Flag any mismatch.
+3. **Reconcile with the repo, and check the package against itself.** Run
+   `git status`, `git log --oneline -10`, and `git diff --stat` to detect work
+   done since PROGRESS.md was last updated, or **spec-vs-tree** drift. Then run a
+   tiny **cross-artifact consistency check** (internal drift, no repo needed):
+   - PROGRESS checkboxes that don't line up with PLAN steps (a step checked off
+     with no matching PLAN item, or a PLAN step missing from the checklist).
+   - DECISIONS that contradict PLAN (a decision the plan never absorbed).
+   - The banner's provenance SHA vs. current `HEAD` — if the spec was written many
+     commits ago, say so; the map may be stale.
+   Flag every mismatch; a stale package is a bad map to resume on.
 
-4. **Brief the user — then stop.** Output a concise summary:
+4. **Surface the decision queue (loop back to Opus).** If `DECISIONS.md` has open
+   *Open questions for the spec author*, list them as a **decision queue** and
+   state plainly that **resolving them is Opus's job, not the implementer's** —
+   the implementer must not guess past them or silently edit PLAN. If you are
+   running this *as Opus*, this is your queue to answer and fold back into PLAN;
+   if not, it's the back-channel that needs the planner's input before work
+   continues.
+
+5. **Brief the user — then stop.** Output a concise summary:
    - **Where we are**: done vs. pending, from PROGRESS.md.
    - **Next step**: the first unchecked item in PLAN.md.
-   - **Blockers / open questions**: anything from DECISIONS.md needing a decision.
-   - **Drift**: any mismatch found in step 3.
+   - **Decision queue**: the open questions from step 4 (and who owns them).
+   - **Drift**: spec-vs-tree and internal-consistency mismatches found in step 3.
 
    Do **not** start editing or implementing. Wait for the user to confirm the
    next move.
