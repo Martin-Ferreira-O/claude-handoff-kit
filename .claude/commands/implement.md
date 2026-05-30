@@ -79,8 +79,11 @@ Target handoff (optional slug): `$ARGUMENTS`
 
 9. **Review against the spec (fresh-context gate).** Before reporting done — once
    the PLAN steps you set out to finish are committed — run an adversarial review
-   in a fresh context that sees only the diff and `PLAN.md`. Use the bundled
-   `/code-review` skill or spawn a subagent with this prompt shape:
+   in a fresh context that sees only the diff and `PLAN.md`. Use whatever
+   fresh-context reviewer your tool offers — on Claude the bundled `/code-review`
+   skill or a subagent; on Codex or another agent, its equivalent reviewer (or a
+   clean session handed only the diff + PLAN). The gate is mandatory; the
+   mechanism is not Claude-specific. Prompt shape:
 
    > Review this diff **against `PLAN.md`**. Verify every requirement is
    > implemented and the **Verification** command(s) in PLAN actually pass.
