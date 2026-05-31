@@ -15,16 +15,20 @@ where the last one left off, without trusting a stale summary.
 ## The cycle
 
 ```
-/plan → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /handoff → (/resume) → /implement → /code-review
 ```
+
+The arrows are a **recommended flow, not technical dependencies** — every command
+re-derives its own context from the on-disk package, so you can enter the cycle at
+any point and skip the steps you don't need.
 
 | Command | Who runs it | What it does |
 |---|---|---|
 | **`/plan`** | Opus | The formal entry point: creates the task branch (so you avoid working on `main`), drives the planning, writes a draft to `~/.claude/plans/<slug>.md` with a runnable **Verification** block, and runs a self-critique pass over it. Optional, and tool-agnostic — Codex can skip it and bring its own plan. |
 | **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers into the plan **before** the handoff. Optional: skip it for one-sentence changes. |
 | **`/handoff`** | Opus | Dumps context + spec into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) and registers the slug in `INDEX.md`. |
-| **`/resume`** | any agent | Rebuilds working context and briefs the user. **Does not implement.** |
-| **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan. |
+| **`/resume`** | any agent | **Optional, read-only briefing.** Rebuilds context and reports where the task stands — then **stops, does not implement**. |
+| **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan. **Re-derives context itself**, so `/resume` is not a prerequisite. |
 | **`/code-review`** | any agent | The adversarial gate: does the diff satisfy every requirement in `PLAN.md`? |
 
 Two more commands sit **outside** the linear cycle — one for scale, one for
@@ -38,6 +42,14 @@ lifecycle:
 The whole point is that the **spec lives on disk**, not in one session's memory.
 The planner writes it once; any implementer — even one that has never seen the
 conversation — reads the same four files and re-derives the truth from the code.
+
+> **`/resume` before `/implement`?** Not required. `/implement` already locates
+> the handoff, loads all four files, reconciles against the repo, and checks for
+> blockers before it writes a line — the same context `/resume` rebuilds. Reach
+> for `/resume` when you want a **read-only checkpoint first**: to review and
+> approve before any code is written, to surface open questions for Opus to
+> resolve, or just to check on an agent's progress. When you're ready to execute,
+> go straight to `/implement <slug>`.
 
 ---
 
