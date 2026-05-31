@@ -1,6 +1,6 @@
 ---
 description: Interview the user on the hard parts of a task and fold the answers into the plan before /handoff
-argument-hint: <task-slug-or-description>
+argument-hint: <task-slug-or-description> [plan-path]
 allowed-tools: AskUserQuestion, Read, Write, Edit, Bash(ls:*), Bash(git status:*), Bash(git log:*), Bash(git diff:*)
 ---
 
@@ -24,8 +24,11 @@ it to one-line fixes. Say so and stop if the task is that small.
 
 ## Steps
 
-1. **Orient.** Read the active source plan in `~/.claude/plans/` (and any existing
-   `docs/handoff/<slug>/PLAN.md` if this task is already drafted). `git status` /
+1. **Orient.** Locate and read the active **source plan** — *any agreed plan draft*, not
+   only Claude's. Resolve it in order: (a) a path passed as argument, (b)
+   `~/.claude/plans/<...>.md`, (c) a repo draft like `docs/plans/<slug>.md` —
+   use the first that exists and note which. Also read any existing
+   `docs/handoff/<slug>/PLAN.md` if this task is already drafted. `git status` /
    `git log --oneline -10` for current state. Identify what is genuinely
    under-specified versus already decided — only ask about the former.
 
@@ -38,7 +41,8 @@ it to one-line fixes. Say so and stop if the task is that small.
    are small enough for the implementer to resolve without guessing at design.
 
 3. **Fold the answers into the plan.** Write the resolved decisions back into the
-   source plan draft in `~/.claude/plans/<...>.md` — sharpen **Goal** and
+   source plan draft you loaded — wherever it lives (`~/.claude/plans/`, a
+   repo draft, or the path you were given) — sharpen **Goal** and
    **Non-goals / scope**, and add a short **Clarifications (resolved)** section
    capturing each Q→A so the rationale survives into `PLAN.md` when `/handoff`
    copies the plan. You may write/append to the plan draft **only** — never edit

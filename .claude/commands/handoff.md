@@ -1,6 +1,6 @@
 ---
 description: Dump current context + plan into docs/handoff/<slug>/ for another agent to continue
-argument-hint: <task-slug-or-description>
+argument-hint: <task-slug-or-description> [plan-path]
 allowed-tools: Read, Write, Edit, Bash(ls:*), Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(date:*)
 ---
 
@@ -23,8 +23,11 @@ Argument (task slug or short description): `$ARGUMENTS`
 
 2. **Gather real state** (do not invent it):
    - The current conversation: what we're doing, why, and what's left.
-   - The active plan in `~/.claude/plans/` driving this work — reference its
-     full path and copy/summarize it into `PLAN.md`.
+   - The active **source plan** driving this work — *any agreed plan draft*,
+     not only Claude's. Resolve it in order: (a) a path passed as argument,
+     (b) `~/.claude/plans/<...>.md`, (c) a repo draft like `docs/plans/<slug>.md`;
+     use the first that exists. Reference its **real full path** (it goes in
+     the banner) and copy/summarize it into `PLAN.md`.
    - `git status` and `git diff --stat` for in-flight, uncommitted changes.
    - `git log --oneline -10` for recent landed work.
    - The auto-memory index for project constraints worth carrying over.
@@ -66,7 +69,7 @@ Header banner at the top of all four files (substitute real values):
 > Handoff doc for task `<slug>`. Author: <your model, e.g. Claude Opus 4.7>. Updated: <YYYY-MM-DD HH:MM>.
 > IMPLEMENTING AGENT: read CONTEXT.md → PLAN.md → PROGRESS.md → DECISIONS.md before starting.
 > Update PROGRESS.md after every meaningful change, and record any deviation from PLAN.md in DECISIONS.md.
-> Spec written by <planner model> against commit `<sha>` on branch `<branch>`; source plan: `~/.claude/plans/<...>.md`. If HEAD has moved far past this, reconcile before trusting the spec.
+> Spec written by <planner model> against commit `<sha>` on branch `<branch>`; source plan: `<resolved-plan-path>`. If HEAD has moved far past this, reconcile before trusting the spec.
 ```
 
 The 4th line is **provenance/freshness**: it pins the planner model, the exact
@@ -83,7 +86,8 @@ reflects one moment in time — making that moment explicit lets the implementer
 
 ### PLAN.md — the spec (author → implementer)
 - **Goal** and **non-goals / scope**.
-- **Source plan**: link the `~/.claude/plans/<...>.md` path.
+- **Source plan**: link the resolved source-plan path (see step 2 — may be
+  `~/.claude/plans/`, a repo draft, or a path you were given).
 - **Ordered steps**, each concrete enough to execute.
 - **Verification** (mandatory, not prose): the exact copy-pasteable command(s)
   the implementer runs to prove the work is done, plus the **observable pass
