@@ -69,8 +69,16 @@ Target handoff (optional slug): `$ARGUMENTS`
 
      PLAN step <n>. <one line on what changed / how verified>
 
-     Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+     Co-Authored-By: <your implementer identity>
      ```
+   - **Sign the commit with your own implementer identity** — do not copy a fixed
+     `Co-Authored-By`. The author of the spec (Opus) is not who implements it.
+     - On Claude, use the model running this session (e.g. the current Sonnet/Opus
+       model, not a hardcoded "Opus 4.8"): `Co-Authored-By: Claude <model> <noreply@anthropic.com>`.
+     - On Codex or another agent, use its own attribution — or omit the
+       `Co-Authored-By` line entirely if no co-author applies.
+   - Keep the rest of the template (`<slug>: <summary>` subject and `PLAN step <n>. …`
+     body) intact — that format keeps the history legible.
    - Do **not** push — pushing stays manual unless the user asks.
 
 7. **Record deviations as they happen.** Before continuing past any deviation
