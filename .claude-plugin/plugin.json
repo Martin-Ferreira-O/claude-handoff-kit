@@ -1,0 +1,21 @@
+{
+  "name": "handoff-kit",
+  "displayName": "Claude Handoff Kit",
+  "version": "0.1.0",
+  "description": "Harness Engineering: file-based handoffs between a planning agent (Opus) and an implementer (Codex or a fresh Claude).",
+  "author": { "name": "Martin Ferreira" },
+  "repository": "https://github.com/Martin-Ferreira-O/claude-handoff-kit",
+  "license": "MIT",
+  "keywords": ["handoff", "planning", "agents", "codex", "harness", "workflow"],
+  "commands": [
+    "./.claude/commands/plan.md",
+    "./.claude/commands/clarify.md",
+    "./.claude/commands/handoff.md",
+    "./.claude/commands/resume.md",
+    "./.claude/commands/implement.md",
+    "./.claude/commands/dispatch.md",
+    "./.claude/commands/archive.md",
+    "./.claude/commands/handoff-init.md"
+  ],
+  "hooks": "./hooks/hooks.json"
+}
