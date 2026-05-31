@@ -18,6 +18,8 @@ Target handoff (optional slug): `$ARGUMENTS`
    - If `$ARGUMENTS` names a slug, use `docs/handoff/<slug>/`.
    - If empty, `ls -t docs/handoff/*/PROGRESS.md` and pick the folder whose
      `PROGRESS.md` was modified most recently. State which one you chose and why.
+     (Archived slugs under `docs/handoff/_archive/<slug>/` fall outside this glob,
+     so they won't be picked up here — see `/archive`.)
    - If `docs/handoff/` is empty or missing, say so and stop.
 
 2. **Read all four files in order**: CONTEXT.md → PLAN.md → PROGRESS.md →

@@ -20,6 +20,8 @@ Target handoff (optional slug): `$ARGUMENTS`
    - If `$ARGUMENTS` names a slug, use `docs/handoff/<slug>/`.
    - If empty, `ls -t docs/handoff/*/PROGRESS.md` and pick the folder whose
      `PROGRESS.md` was modified most recently. State which one you chose and why.
+     (Archived slugs under `docs/handoff/_archive/<slug>/` are one level deeper
+     than this glob, so they're excluded automatically — see `/archive`.)
    - If `docs/handoff/` is empty or missing, say so and stop.
 
 2. **Load the spec.** Read all four files in order: CONTEXT.md → PLAN.md →
@@ -95,7 +97,11 @@ Target handoff (optional slug): `$ARGUMENTS`
    flip `status` to `in-progress` while steps remain, or `done` once the plan is
    fully implemented and verified; refresh the `note`. Update the existing row,
    don't append a duplicate. This update rides along with the next step's commit
-   (or a final bookkeeping commit if there are no more steps).
+   (or a final bookkeeping commit if there are no more steps). Once the slug is
+   `done`, retiring it from the active area is an **optional, explicit**
+   follow-up: `/archive <slug>` moves the package into `docs/handoff/_archive/`
+   so it stops competing in the "most recently touched" heuristic. Don't archive
+   automatically here — leave it to the user.
 
 9. **Review against the spec (fresh-context gate).** Before reporting done — once
    the PLAN steps you set out to finish are committed — run an adversarial review

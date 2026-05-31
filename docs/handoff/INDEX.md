@@ -18,4 +18,4 @@ append a duplicate. The table is both human-readable and machine-parseable
 
 | slug | status | depends-on | updated | note |
 |---|---|---|---|---|
-| harden-handoff-kit | done | — | 2026-05-29 | 6/6 steps implemented & committed |
+| harden-handoff-kit | done | — | 2026-05-30 | archived — 6/6 steps implemented & committed |

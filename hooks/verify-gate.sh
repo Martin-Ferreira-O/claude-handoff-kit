@@ -37,6 +37,8 @@ if [ -n "$candidate" ] && [ -d "docs/handoff/$candidate" ]; then
   slug_dir="docs/handoff/$candidate"
 else
   # Fallback: branch matches no slug — most recently touched PROGRESS.md.
+  # `_archive/<slug>/PROGRESS.md` sits one level deeper than this glob, so
+  # archived (done) slugs are excluded automatically and never win the race.
   latest=$(ls -t docs/handoff/*/PROGRESS.md 2>/dev/null | head -1 || true)
   [ -n "$latest" ] && slug_dir=$(dirname "$latest")
 fi
