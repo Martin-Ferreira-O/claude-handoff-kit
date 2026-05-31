@@ -136,9 +136,13 @@ with capped concurrency and a reviewed merge per wave — see
 ## Repository layout
 
 ```
-.claude/commands/      plan · clarify · handoff · resume · implement · dispatch · archive
-.claude/settings.json.example   optional hook wiring
-hooks/                 progress-sync.sh · verify-gate.sh        (Claude-only enforcement)
+.claude-plugin/plugin.json      plugin manifest (commands + hooks)
+.claude-plugin/marketplace.json self-marketplace, so `/plugin marketplace add` works
+.claude/commands/      plan · clarify · handoff · resume · implement · dispatch · archive · handoff-init
+.claude/settings.json.example   optional hook wiring (non-plugin / script path)
+hooks/                 progress-sync.sh · verify-gate.sh · hooks.json  (Claude-only enforcement)
+templates/             contract snippets seeded by /handoff-init & install.sh (single source)
+install.sh             tool-agnostic installer (curl-able), for Codex / any agent
 docs/handoff/<slug>/   CONTEXT · PLAN · PROGRESS · DECISIONS    (per-task handoffs)
 docs/handoff/INDEX.md  the structured handoff registry (status + depends-on)
 docs/handoff/_archive/ retired done slugs (history, kept out of the live glob)
@@ -155,14 +159,71 @@ through the kit, with live handoffs under `docs/handoff/`.
 
 ---
 
-## Getting started
+## Install
 
-1. Drop the `.claude/commands/` files into a project (or use this repo as a
-   template).
-2. Run **`/plan <task>`** with Opus to branch and draft the spec, then
+The repo is **its own Claude Code plugin *and* its own marketplace**, and also
+ships a tool-agnostic install script. Two paths, same result — pick one:
+
+### Claude Code (plugin — the official, zero-copy path)
+
+This repo is **its own marketplace** (`.claude-plugin/marketplace.json`) and the
+plugin lives at its root (`.claude-plugin/plugin.json`). Install it the way you'd
+install any Claude Code plugin — add the marketplace from GitHub, then install
+the `handoff-kit` plugin from it.
+
+**From inside a Claude Code session** (slash commands):
+
+```
+/plugin marketplace add Martin-Ferreira-O/claude-handoff-kit
+/plugin install handoff-kit@claude-handoff-kit
+/handoff-init
+```
+
+**Or from the terminal** (the `claude` CLI, e.g. for scripting/CI):
+
+```sh
+claude plugin marketplace add Martin-Ferreira-O/claude-handoff-kit
+claude plugin install handoff-kit@claude-handoff-kit
+```
+
+`handoff-kit@claude-handoff-kit` reads as `<plugin>@<marketplace>`. The first time
+you add a marketplace Claude Code asks you to trust it; after installing, the
+`/plan · /clarify · /handoff · /resume · /implement · /dispatch · /archive ·
+/handoff-init` commands are available with **no files copied** into your project,
+and the optional enforcement hooks are wired (and stay inert until you opt in —
+see [the hooks section](#optional-enforcement-layer-claude-only)).
+
+Then run **`/handoff-init`** once per project to seed the shared contract into the
+repo — `AGENTS.md` (the contract Codex reads too), `docs/handoff/INDEX.md`, and,
+optionally, the `CLAUDE.md` workflow block. It's idempotent, so re-run it any time
+to refresh an updated contract. To pick up a newer version of the kit later,
+`/plugin marketplace update claude-handoff-kit` and re-run `/handoff-init`.
+
+### Codex / any agent (script, tool-agnostic)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Martin-Ferreira-O/claude-handoff-kit/main/install.sh | sh
+# or, from a clone:  ./install.sh --target /path/to/project --with-hooks
+```
+
+The script copies `.claude/commands/` (and, with `--with-hooks`, the hooks) into
+the target, then seeds `AGENTS.md` + `docs/handoff/INDEX.md` the same way
+`/handoff-init` does. It never clobbers your files without `--force` and never
+duplicates the contract block on re-runs. Your implementer (Codex or anyone)
+reads `AGENTS.md` and follows the cycle.
+
+> Why `/handoff-init` and not the plugin alone? Claude Code does **not** load a
+> plugin's `AGENTS.md`/`CLAUDE.md` as project context — plugins contribute
+> through commands, hooks, and skills. The contract has to land as a real file in
+> your repo so Codex and the planner can read it; that's what the init step (and
+> the script) do.
+
+## Using it
+
+1. Run **`/plan <task>`** with Opus to branch and draft the spec, then
    **`/clarify`** to pin down the edges.
-3. **`/handoff <slug>`** to write the package.
-4. Hand the slug to your implementer — a fresh Claude or Codex — and run
+2. **`/handoff <slug>`** to write the package.
+3. Hand the slug to your implementer — a fresh Claude or Codex — and run
    **`/resume <slug>`** to rebuild context, then **`/implement <slug>`** to do
    the work.
-5. (Optional) Wire the hooks from `docs/hooks.md` for deterministic enforcement.
+4. (Optional) Wire the hooks from `docs/hooks.md` for deterministic enforcement.
