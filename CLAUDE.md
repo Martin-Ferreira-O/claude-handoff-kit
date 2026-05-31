@@ -63,8 +63,15 @@ específica para Claude/Opus como autor del spec.
 
 ## Git
 
+- **Una rama por slug, creada lo antes posible.** La rama de tarea nace al
+  **arranque** del ciclo (`/plan` la crea desde `main`/`master`), no recién en
+  `/implement`. Es pre-requisito de los slugs paralelos (el Stop-hook resuelve el
+  slug por la rama y los worktrees de `/dispatch` necesitan una rama por slug). Se
+  permiten prefijos del proyecto host (p.ej. `feat/<slug>`) siempre que el slug se
+  derive del sufijo.
 - `/implement` hace **un commit por paso verificado** y **no pushea**.
-- Si estás en `main`/`master`, primero creá una branch de tarea.
+- El branch-step de `/implement` es una **red de seguridad idempotente**: si ya
+  estás en la rama del slug no hace nada; si seguís en `main`/`master`, la crea.
 - Pushear y abrir PR queda manual, salvo que el usuario lo pida.
 
 ## Convenciones de los comandos (este repo se auto-dogfoodea)

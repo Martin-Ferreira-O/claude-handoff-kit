@@ -59,8 +59,12 @@ Target handoff (optional slug): `$ARGUMENTS`
    its PROGRESS/DECISIONS updates are written, commit the code **and** the doc
    updates together as one atomic commit. Only commit a step that passed its
    checks — never commit a `🚧`/`⛔` step.
-   - First branch if you're on the default branch (`main`/`master`); otherwise
-     stay on the current task branch.
+   - **Branch safety net (idempotent).** The task branch is normally created at
+     the *start* of the cycle by `/plan` (one branch per slug). This step only
+     catches the case where it wasn't: if you're already on the slug's branch
+     (or a prefixed variant like `feat/<slug>`), do **nothing**; if you're on the
+     default branch (`main`/`master`), create it now (`git checkout -b <slug>`).
+     Never create a second branch when one for this slug already exists.
    - Stage just what this step touched, then commit with a message tied to the
      step:
 
