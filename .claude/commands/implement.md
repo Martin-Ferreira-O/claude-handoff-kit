@@ -31,8 +31,14 @@ Target handoff (optional slug): `$ARGUMENTS`
    since PROGRESS.md was last updated and any **spec-vs-tree** drift. Then run the
    tiny **cross-artifact consistency check**: flag PROGRESS checkboxes that don't
    match PLAN steps, DECISIONS that contradict PLAN, and a provenance SHA far
-   behind `HEAD`. If the spec is already fully done, say so and stop; if the
-   package is internally inconsistent, surface it before implementing on a bad map.
+   behind `HEAD`. Also check the derived **`.verify`** artifact: it is a single-line
+   projection of the PLAN **Verification** block (see `docs/hooks.md`). If the
+   PLAN's Verification is one runnable command and `.verify` is missing or no longer
+   matches it, regenerate `.verify` from the PLAN (PLAN is the source of truth; never
+   edit PLAN to match `.verify`). If Verification is multi-command, `.verify` should
+   stay absent — don't invent a format. If the spec is already fully done, say so and
+   stop; if the package is internally inconsistent, surface it before implementing on
+   a bad map.
 
 4. **Check for blockers first.** If `DECISIONS.md` has unresolved *Open questions
    for the spec author* that block the next step, surface them and stop — do not

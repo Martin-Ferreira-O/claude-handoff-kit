@@ -52,15 +52,22 @@ blocks turn-end (exit 2) if it fails. **The gate is inactive whenever no `.verif
 file exists** — so this repo, which has no test suite, is unaffected until someone
 opts in.
 
-To use it, drop the PLAN **Verification** command into the slug folder:
+**`.verify` is generated, not hand-rolled.** `/handoff` derives it from the PLAN
+**Verification** block: when that block is one runnable command, `/handoff` writes
+that command to `docs/handoff/<slug>/.verify`; `/implement` keeps it in sync (it
+regenerates a stale `.verify` during its consistency check). The PLAN stays the
+single source of truth — `.verify` is just a projection of it, so **edit the PLAN
+Verification, not `.verify`**; the next `/handoff` or `/implement` reprojects it.
+If you ever need to set it by hand, it is a single line — the command only:
 ```sh
 echo '.venv/bin/python manage.py test billing' > docs/handoff/<slug>/.verify
 ```
 
 **Single-command assumption.** The gate runs one command. If your PLAN
-Verification block needs several, wrap them in a script and point `.verify` at it
-— or, per the kit's own guidance, **pause and ask the spec author** how to express
-the pass signal rather than inventing a multi-command format on the fly.
+Verification block needs several, `/handoff` deliberately leaves `.verify`
+uncreated (it won't invent a multi-command format) and the gate stays inactive.
+Wrap the commands in a script and point `.verify` at it — or, per the kit's own
+guidance, **pause and ask the spec author** how to express the pass signal.
 
 ## Why this is opt-in and separate
 

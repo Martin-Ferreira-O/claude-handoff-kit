@@ -34,6 +34,18 @@ Argument (task slug or short description): `$ARGUMENTS`
    starts with the header banner. Fill them with real content — never leave a
    section as an empty placeholder. If something is unknown, say so explicitly.
 
+   Then **derive `.verify` from the PLAN Verification block** (it feeds the
+   optional Stop hook — see `docs/hooks.md`). `.verify` is a *projection* of the
+   PLAN; PLAN stays the single source of truth.
+   - If the Verification block is **one runnable command**, write exactly that
+     command to `docs/handoff/<slug>/.verify` (one line, the command only — no
+     prose, no pass-signal annotation).
+   - If it is **several commands** (or not expressible as one), **do not invent a
+     multi-command format**: leave `.verify` uncreated and note in the report that
+     the Stop gate stays inactive until the author wraps the commands in a script
+     and points `.verify` at it (consistent with `docs/hooks.md`).
+   - `.verify` is versioned (auditable) — stage it alongside the four files.
+
 4. **Update the registry** `docs/handoff/INDEX.md` — one **table row per slug**
    under the `## Handoffs` table: `| <slug> | <status> | <depends-on> | <date> | <note> |`.
    - `status` ∈ {`todo`, `in-progress`, `blocked`, `done`} — a fresh handoff is
