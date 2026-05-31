@@ -7,6 +7,18 @@
 # into an enforced one for Claude sessions. Codex is governed by the Markdown
 # rule as before.
 #
+# SLUG RESOLUTION IS BRANCH-AWARE. The active slug is the one named by the
+# current branch (`<slug>` or any `*/<slug>`), which aligns with the kit's
+# "one branch per slug" model and makes parallel worktrees safe: each worktree
+# sits on its own branch and validates only its own slug. If the branch matches
+# no handoff, it falls back to the old heuristic (most recently touched
+# PROGRESS.md).
+#
+# SCOPED TO WORK IN PROGRESS. The gate only fires when this worktree has
+# uncommitted or staged changes — read-only / question turns leave a clean tree,
+# so they are never blocked. (/implement commits one verified step at a time, so
+# a clean tree means the last commit already passed this gate.)
+#
 # ASSUMES A SINGLE SHELL COMMAND. Put it on the first line of
 # docs/handoff/<slug>/.verify (this is the exact command from the PLAN
 # **Verification** block). If your Verification needs several commands, wrap them
@@ -16,13 +28,29 @@
 # which has no test suite — is unaffected until someone opts in.
 set -euo pipefail
 
-# Active slug = most recently touched PROGRESS.md (same heuristic /implement and
-# /resume use to locate the current handoff).
-latest=$(ls -t docs/handoff/*/PROGRESS.md 2>/dev/null | head -1 || true)
-[ -z "$latest" ] && exit 0                 # no handoff in play — gate inactive
-slug_dir=$(dirname "$latest")
+# Active slug = the one named by the current branch. Strip any prefix so both
+# `<slug>` and `feature/<slug>` resolve to `<slug>`.
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+candidate=${branch##*/}
+slug_dir=""
+if [ -n "$candidate" ] && [ -d "docs/handoff/$candidate" ]; then
+  slug_dir="docs/handoff/$candidate"
+else
+  # Fallback: branch matches no slug — most recently touched PROGRESS.md.
+  latest=$(ls -t docs/handoff/*/PROGRESS.md 2>/dev/null | head -1 || true)
+  [ -n "$latest" ] && slug_dir=$(dirname "$latest")
+fi
+[ -z "$slug_dir" ] && exit 0               # no handoff in play — gate inactive
+
 verify_file="$slug_dir/.verify"
 [ -f "$verify_file" ] || exit 0            # no command configured — gate inactive
+
+# Only gate turns that actually touched work. A clean worktree means nothing
+# changed this turn (read-only / question turn), so there is nothing new to
+# verify — don't trap the user in a verification loop over an unrelated turn.
+if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
+  exit 0
+fi
 
 verify_cmd=$(head -1 "$verify_file")
 [ -z "$verify_cmd" ] && exit 0

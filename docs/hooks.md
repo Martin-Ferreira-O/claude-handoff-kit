@@ -46,11 +46,25 @@ repo keeps non-doc files under `docs/`.
 
 ## `verify-gate.sh` — Stop verification gate (off by default)
 
-On turn-end it locates the active slug (most recently touched `PROGRESS.md`),
-reads a **single shell command** from `docs/handoff/<slug>/.verify`, runs it, and
-blocks turn-end (exit 2) if it fails. **The gate is inactive whenever no `.verify`
-file exists** — so this repo, which has no test suite, is unaffected until someone
-opts in.
+On turn-end it locates the active slug, reads a **single shell command** from
+`docs/handoff/<slug>/.verify`, runs it, and blocks turn-end (exit 2) if it fails.
+**The gate is inactive whenever no `.verify` file exists** — so this repo, which
+has no test suite, is unaffected until someone opts in.
+
+**Slug resolution is branch-aware.** The active slug is the one named by the
+current branch — `<slug>` or any `*/<slug>` (e.g. `feature/<slug>`). This aligns
+with the kit's "one branch per slug" model and makes **parallel worktrees** safe:
+each worktree sits on its own branch and validates only its own slug, so a broken
+`.verify` in `slug-a` never blocks a turn in the `slug-b` worktree. If the branch
+matches no handoff folder, it falls back to the old heuristic (most recently
+touched `PROGRESS.md`).
+
+**Scoped to work in progress.** The gate only fires when the current worktree has
+uncommitted or staged changes. A clean tree means the turn didn't touch any work
+(a read-only or question turn), so there is nothing new to verify and the gate
+exits 0 — it won't trap you in a verification loop over a turn that changed
+nothing. Since `/implement` commits one verified step at a time, a clean tree also
+means the last commit already cleared this gate.
 
 **`.verify` is generated, not hand-rolled.** `/handoff` derives it from the PLAN
 **Verification** block: when that block is one runnable command, `/handoff` writes
