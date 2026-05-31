@@ -18,10 +18,14 @@ Target handoff (optional slug): `$ARGUMENTS`
    - If `$ARGUMENTS` names a slug, use `docs/handoff/<slug>/`.
    - If empty, `ls -t docs/handoff/*/PROGRESS.md` and pick the folder whose
      `PROGRESS.md` was modified most recently. State which one you chose and why.
+     (Archived slugs under `docs/handoff/_archive/<slug>/` fall outside this glob,
+     so they won't be picked up here — see `/archive`.)
    - If `docs/handoff/` is empty or missing, say so and stop.
 
 2. **Read all four files in order**: CONTEXT.md → PLAN.md → PROGRESS.md →
-   DECISIONS.md.
+   DECISIONS.md. Also read the slug's **row** in `docs/handoff/INDEX.md` for its
+   registry `status` (`todo`/`in-progress`/`blocked`/`done`) and `depends-on`;
+   if the row's status contradicts what PROGRESS shows, flag it as drift.
 
 3. **Reconcile with the repo, and check the package against itself.** Run
    `git status`, `git log --oneline -10`, and `git diff --stat` to detect work
@@ -43,7 +47,8 @@ Target handoff (optional slug): `$ARGUMENTS`
    continues.
 
 5. **Brief the user — then stop.** Output a concise summary:
-   - **Where we are**: done vs. pending, from PROGRESS.md.
+   - **Where we are**: done vs. pending, from PROGRESS.md (and the INDEX row's
+     `status`/`depends-on`).
    - **Next step**: the first unchecked item in PLAN.md.
    - **Decision queue**: the open questions from step 4 (and who owns them).
    - **Drift**: spec-vs-tree and internal-consistency mismatches found in step 3.

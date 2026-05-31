@@ -34,33 +34,67 @@ independent.
 
 ## `progress-sync.sh` — PROGRESS-sync commit guard
 
-Intercepts `git commit` Bash calls. If the staged set contains any path **outside**
-`docs/handoff/` ("code") but **no** `docs/handoff/<slug>/PROGRESS.md`, it exits 2
-to block the commit and tells Claude to update + stage PROGRESS first. A
-docs-only or PROGRESS-included commit passes. Requires `python3` (used only to
-parse the hook's stdin JSON robustly).
+Intercepts `git commit` Bash calls. If the staged set contains any **code** path
+but **no** `docs/handoff/<slug>/PROGRESS.md`, it exits 2 to block the commit and
+tells Claude to update + stage PROGRESS first. A docs-only or PROGRESS-included
+commit passes. Requires `python3` (used only to parse the hook's stdin JSON
+robustly).
 
-Heuristic, by design: "code" = anything not under `docs/handoff/`. That keeps the
-rule simple and dependency-light; tune the `grep` patterns in the script if your
-repo keeps non-doc files under `docs/`.
+**What counts as "code".** Anything that is *not* pure documentation. Pure docs —
+which never trigger the guard — are anything under `docs/` (plans, `hooks.md`, the
+handoff folder itself) plus root-level `*.md` (`README.md`, `CLAUDE.md`,
+`AGENTS.md`). This excludes the kit's own bookkeeping commits, which the older
+"anything outside `docs/handoff/` is code" rule flagged as false positives. The
+classification is the `grep` patterns near the top of the script — tune them if
+your repo keeps code under `docs/` or docs outside it.
+
+**Branch-aware slug matching.** When a PROGRESS *is* staged, the guard also checks
+it is the **right** slug's. If the current branch names a slug (`<slug>` or
+`*/<slug>`, same resolution as `verify-gate.sh`), the staged PROGRESS must be
+`docs/handoff/<slug>/PROGRESS.md` — committing slug-a's code while updating
+slug-b's PROGRESS is the same gap the guard exists to catch, and aligns with the
+kit's one-branch-per-slug model. If the branch matches no handoff folder, any
+staged PROGRESS is accepted, so the stricter check adds no friction outside the
+normal flow.
 
 ## `verify-gate.sh` — Stop verification gate (off by default)
 
-On turn-end it locates the active slug (most recently touched `PROGRESS.md`),
-reads a **single shell command** from `docs/handoff/<slug>/.verify`, runs it, and
-blocks turn-end (exit 2) if it fails. **The gate is inactive whenever no `.verify`
-file exists** — so this repo, which has no test suite, is unaffected until someone
-opts in.
+On turn-end it locates the active slug, reads a **single shell command** from
+`docs/handoff/<slug>/.verify`, runs it, and blocks turn-end (exit 2) if it fails.
+**The gate is inactive whenever no `.verify` file exists** — so this repo, which
+has no test suite, is unaffected until someone opts in.
 
-To use it, drop the PLAN **Verification** command into the slug folder:
+**Slug resolution is branch-aware.** The active slug is the one named by the
+current branch — `<slug>` or any `*/<slug>` (e.g. `feature/<slug>`). This aligns
+with the kit's "one branch per slug" model and makes **parallel worktrees** safe:
+each worktree sits on its own branch and validates only its own slug, so a broken
+`.verify` in `slug-a` never blocks a turn in the `slug-b` worktree. If the branch
+matches no handoff folder, it falls back to the old heuristic (most recently
+touched `PROGRESS.md`).
+
+**Scoped to work in progress.** The gate only fires when the current worktree has
+uncommitted or staged changes. A clean tree means the turn didn't touch any work
+(a read-only or question turn), so there is nothing new to verify and the gate
+exits 0 — it won't trap you in a verification loop over a turn that changed
+nothing. Since `/implement` commits one verified step at a time, a clean tree also
+means the last commit already cleared this gate.
+
+**`.verify` is generated, not hand-rolled.** `/handoff` derives it from the PLAN
+**Verification** block: when that block is one runnable command, `/handoff` writes
+that command to `docs/handoff/<slug>/.verify`; `/implement` keeps it in sync (it
+regenerates a stale `.verify` during its consistency check). The PLAN stays the
+single source of truth — `.verify` is just a projection of it, so **edit the PLAN
+Verification, not `.verify`**; the next `/handoff` or `/implement` reprojects it.
+If you ever need to set it by hand, it is a single line — the command only:
 ```sh
 echo '.venv/bin/python manage.py test billing' > docs/handoff/<slug>/.verify
 ```
 
 **Single-command assumption.** The gate runs one command. If your PLAN
-Verification block needs several, wrap them in a script and point `.verify` at it
-— or, per the kit's own guidance, **pause and ask the spec author** how to express
-the pass signal rather than inventing a multi-command format on the fly.
+Verification block needs several, `/handoff` deliberately leaves `.verify`
+uncreated (it won't invent a multi-command format) and the gate stays inactive.
+Wrap the commands in a script and point `.verify` at it — or, per the kit's own
+guidance, **pause and ask the spec author** how to express the pass signal.
 
 ## Why this is opt-in and separate
 

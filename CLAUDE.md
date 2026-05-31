@@ -13,9 +13,15 @@ específica para Claude/Opus como autor del spec.
 ## El ciclo
 
 ```
-plan (Opus) → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /handoff → /resume → /implement → /code-review
 ```
 
+- **/plan** — Opus arranca el ciclo: crea la rama de tarea (para no trabajar en
+  `main`), conduce el planning y escribe un draft en `~/.claude/plans/<slug>.md`
+  con bloque **Verification**, y lo pasa por una **auto-crítica** antes del
+  handoff. Es **opcional**: corre **fuera** del plan mode nativo (que es
+  read-only y no puede ramificar) y no duplica `/clarify` — ante ambigüedad real,
+  deriva a él. Codex puede saltárselo y traer su propio plan.
 - **/clarify** — Opus entrevista al usuario (`AskUserQuestion`) sobre las partes
   difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas en el
   Goal/Non-goals del plan **antes** del handoff. Es **opcional**: si el cambio
@@ -25,10 +31,15 @@ plan (Opus) → /clarify → /handoff → /resume → /implement → /code-revie
 - **/resume** — reconstruye contexto y hace el briefing; **no implementa**.
 - **/implement** — ejecuta `PLAN.md` paso a paso, con un commit atómico por
   paso verificado (código + actualizaciones de PROGRESS/DECISIONS juntos). Antes
-  del reporte final corre un **gate de review contra `PLAN.md`** (skill
-  `/code-review` o subagente, en contexto fresco): "¿está implementado cada
+  del reporte final corre un **gate de review contra `PLAN.md`** en **contexto
+  realmente fresco** — el revisor ve **solo el diff + `PLAN.md`**, no la sesión
+  del implementador, para no heredar sus supuestos: "¿está implementado cada
   requisito y pasa el comando de **Verification**? Reportá gaps, no preferencias
-  de estilo." El resultado queda en una línea de PROGRESS.
+  de estilo." El mecanismo es por-herramienta: **preferí un subagente / sesión
+  limpia** (la garantía real); correr `/code-review` en la misma sesión es el
+  **fallback de menor garantía**, solo si no hay subagente disponible. El
+  resultado queda en una línea de PROGRESS que distingue `review (fresh)` de
+  `review (in-session)` según el mecanismo usado.
 
 ## Roles (no cruzar las líneas)
 
@@ -57,8 +68,15 @@ plan (Opus) → /clarify → /handoff → /resume → /implement → /code-revie
 
 ## Git
 
+- **Una rama por slug, creada lo antes posible.** La rama de tarea nace al
+  **arranque** del ciclo (`/plan` la crea desde `main`/`master`), no recién en
+  `/implement`. Es pre-requisito de los slugs paralelos (el Stop-hook resuelve el
+  slug por la rama y los worktrees de `/dispatch` necesitan una rama por slug). Se
+  permiten prefijos del proyecto host (p.ej. `feat/<slug>`) siempre que el slug se
+  derive del sufijo.
 - `/implement` hace **un commit por paso verificado** y **no pushea**.
-- Si estás en `main`/`master`, primero creá una branch de tarea.
+- El branch-step de `/implement` es una **red de seguridad idempotente**: si ya
+  estás en la rama del slug no hace nada; si seguís en `main`/`master`, la crea.
 - Pushear y abrir PR queda manual, salvo que el usuario lo pida.
 
 ## Convenciones de los comandos (este repo se auto-dogfoodea)

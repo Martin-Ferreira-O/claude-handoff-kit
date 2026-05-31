@@ -20,6 +20,8 @@ Target handoff (optional slug): `$ARGUMENTS`
    - If `$ARGUMENTS` names a slug, use `docs/handoff/<slug>/`.
    - If empty, `ls -t docs/handoff/*/PROGRESS.md` and pick the folder whose
      `PROGRESS.md` was modified most recently. State which one you chose and why.
+     (Archived slugs under `docs/handoff/_archive/<slug>/` are one level deeper
+     than this glob, so they're excluded automatically — see `/archive`.)
    - If `docs/handoff/` is empty or missing, say so and stop.
 
 2. **Load the spec.** Read all four files in order: CONTEXT.md → PLAN.md →
@@ -31,8 +33,14 @@ Target handoff (optional slug): `$ARGUMENTS`
    since PROGRESS.md was last updated and any **spec-vs-tree** drift. Then run the
    tiny **cross-artifact consistency check**: flag PROGRESS checkboxes that don't
    match PLAN steps, DECISIONS that contradict PLAN, and a provenance SHA far
-   behind `HEAD`. If the spec is already fully done, say so and stop; if the
-   package is internally inconsistent, surface it before implementing on a bad map.
+   behind `HEAD`. Also check the derived **`.verify`** artifact: it is a single-line
+   projection of the PLAN **Verification** block (see `docs/hooks.md`). If the
+   PLAN's Verification is one runnable command and `.verify` is missing or no longer
+   matches it, regenerate `.verify` from the PLAN (PLAN is the source of truth; never
+   edit PLAN to match `.verify`). If Verification is multi-command, `.verify` should
+   stay absent — don't invent a format. If the spec is already fully done, say so and
+   stop; if the package is internally inconsistent, surface it before implementing on
+   a bad map.
 
 4. **Check for blockers first.** If `DECISIONS.md` has unresolved *Open questions
    for the spec author* that block the next step, surface them and stop — do not
@@ -53,8 +61,12 @@ Target handoff (optional slug): `$ARGUMENTS`
    its PROGRESS/DECISIONS updates are written, commit the code **and** the doc
    updates together as one atomic commit. Only commit a step that passed its
    checks — never commit a `🚧`/`⛔` step.
-   - First branch if you're on the default branch (`main`/`master`); otherwise
-     stay on the current task branch.
+   - **Branch safety net (idempotent).** The task branch is normally created at
+     the *start* of the cycle by `/plan` (one branch per slug). This step only
+     catches the case where it wasn't: if you're already on the slug's branch
+     (or a prefixed variant like `feat/<slug>`), do **nothing**; if you're on the
+     default branch (`main`/`master`), create it now (`git checkout -b <slug>`).
+     Never create a second branch when one for this slug already exists.
    - Stage just what this step touched, then commit with a message tied to the
      step:
 
@@ -63,8 +75,16 @@ Target handoff (optional slug): `$ARGUMENTS`
 
      PLAN step <n>. <one line on what changed / how verified>
 
-     Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+     Co-Authored-By: <your implementer identity>
      ```
+   - **Sign the commit with your own implementer identity** — do not copy a fixed
+     `Co-Authored-By`. The author of the spec (Opus) is not who implements it.
+     - On Claude, use the model running this session (e.g. the current Sonnet/Opus
+       model, not a hardcoded "Opus 4.8"): `Co-Authored-By: Claude <model> <noreply@anthropic.com>`.
+     - On Codex or another agent, use its own attribution — or omit the
+       `Co-Authored-By` line entirely if no co-author applies.
+   - Keep the rest of the template (`<slug>: <summary>` subject and `PLAN step <n>. …`
+     body) intact — that format keeps the history legible.
    - Do **not** push — pushing stays manual unless the user asks.
 
 7. **Record deviations as they happen.** Before continuing past any deviation
@@ -72,18 +92,34 @@ Target handoff (optional slug): `$ARGUMENTS`
    author can review. Put anything that needs Opus's input under *Open questions
    for the spec author*. Do not rewrite `PLAN.md` — it is read-mostly.
 
-8. **Update the registry.** Edit the handoff's line in `docs/handoff/INDEX.md`
-   to reflect the new status and date — update the existing line, don't append a
-   duplicate. This update rides along with the next step's commit (or a final
-   bookkeeping commit if there are no more steps).
+8. **Update the registry.** Edit the handoff's **row** in `docs/handoff/INDEX.md`
+   (the `## Handoffs` table) to reflect the new `status` and `updated` date —
+   flip `status` to `in-progress` while steps remain, or `done` once the plan is
+   fully implemented and verified; refresh the `note`. Update the existing row,
+   don't append a duplicate. This update rides along with the next step's commit
+   (or a final bookkeeping commit if there are no more steps). Once the slug is
+   `done`, retiring it from the active area is an **optional, explicit**
+   follow-up: `/archive <slug>` moves the package into `docs/handoff/_archive/`
+   so it stops competing in the "most recently touched" heuristic. Don't archive
+   automatically here — leave it to the user.
 
 9. **Review against the spec (fresh-context gate).** Before reporting done — once
-   the PLAN steps you set out to finish are committed — run an adversarial review
-   in a fresh context that sees only the diff and `PLAN.md`. Use whatever
-   fresh-context reviewer your tool offers — on Claude the bundled `/code-review`
-   skill or a subagent; on Codex or another agent, its equivalent reviewer (or a
-   clean session handed only the diff + PLAN). The gate is mandatory; the
-   mechanism is not Claude-specific. Prompt shape:
+   the PLAN steps you set out to finish are committed — run an adversarial review.
+   The guarantee that matters is **truly fresh context**: the reviewer must see
+   **only the diff and `PLAN.md`**, not your implementation session, so it can't
+   inherit the assumptions you made while writing the code. The gate is mandatory;
+   the mechanism is per-tool:
+   - **Preferred — a dedicated reviewer in clean context.** Hand a fresh agent
+     **only the diff + `PLAN.md`** and nothing else. On Claude, spawn a review
+     **subagent** (clean context window); on Codex or another agent, start a clean
+     session seeded with just those two inputs. This is the real fresh-context
+     gate — use it whenever a subagent/clean session is available.
+   - **Fallback — `/code-review` in the same session.** Running the bundled
+     `/code-review` skill inline is the **lower-guarantee** path: it reuses the
+     current session, which already carries the implementer's context, so it's
+     only acceptable when no subagent/clean session is available.
+
+   Prompt shape (identical either way):
 
    > Review this diff **against `PLAN.md`**. Verify every requirement is
    > implemented and the **Verification** command(s) in PLAN actually pass.
@@ -92,10 +128,13 @@ Target handoff (optional slug): `$ARGUMENTS`
 
    The "report gaps, not style" framing is deliberate: a gap-hungry reviewer
    otherwise drives over-engineering past the spec. Record the outcome as a
-   PROGRESS work-log line (`… — review against PLAN: <pass / N gaps>`). If the
-   review finds a real gap in committed work, fix it as its own verified+committed
-   step; if it surfaces something the spec itself got wrong, log it under
-   *Open questions for the spec author* in DECISIONS.md rather than redesigning.
+   PROGRESS work-log line, **tagging which mechanism ran** so the guarantee is
+   auditable: `… — review (fresh) against PLAN: <pass / N gaps>` for a clean
+   subagent/session, or `… — review (in-session) against PLAN: <pass / N gaps>`
+   for the `/code-review` fallback. If the review finds a real gap in committed
+   work, fix it as its own verified+committed step; if it surfaces something the
+   spec itself got wrong, log it under *Open questions for the spec author* in
+   DECISIONS.md rather than redesigning.
 
 10. **Report.** Summarize:
    - **Done this session**: steps completed, with verification result and the

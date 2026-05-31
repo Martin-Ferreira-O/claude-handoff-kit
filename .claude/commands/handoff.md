@@ -1,6 +1,6 @@
 ---
 description: Dump current context + plan into docs/handoff/<slug>/ for another agent to continue
-argument-hint: <task-slug-or-description>
+argument-hint: <task-slug-or-description> [plan-path]
 allowed-tools: Read, Write, Edit, Bash(ls:*), Bash(git status:*), Bash(git log:*), Bash(git diff:*), Bash(date:*)
 ---
 
@@ -23,8 +23,11 @@ Argument (task slug or short description): `$ARGUMENTS`
 
 2. **Gather real state** (do not invent it):
    - The current conversation: what we're doing, why, and what's left.
-   - The active plan in `~/.claude/plans/` driving this work — reference its
-     full path and copy/summarize it into `PLAN.md`.
+   - The active **source plan** driving this work — *any agreed plan draft*,
+     not only Claude's. Resolve it in order: (a) a path passed as argument,
+     (b) `~/.claude/plans/<...>.md`, (c) a repo draft like `docs/plans/<slug>.md`;
+     use the first that exists. Reference its **real full path** (it goes in
+     the banner) and copy/summarize it into `PLAN.md`.
    - `git status` and `git diff --stat` for in-flight, uncommitted changes.
    - `git log --oneline -10` for recent landed work.
    - The auto-memory index for project constraints worth carrying over.
@@ -34,9 +37,27 @@ Argument (task slug or short description): `$ARGUMENTS`
    starts with the header banner. Fill them with real content — never leave a
    section as an empty placeholder. If something is unknown, say so explicitly.
 
-4. **Update the registry** `docs/handoff/INDEX.md` — one line per handoff:
-   `` - `<slug>` — <one-line status> — updated <date> ``. Create the file if
-   missing. Update the existing line instead of appending a duplicate.
+   Then **derive `.verify` from the PLAN Verification block** (it feeds the
+   optional Stop hook — see `docs/hooks.md`). `.verify` is a *projection* of the
+   PLAN; PLAN stays the single source of truth.
+   - If the Verification block is **one runnable command**, write exactly that
+     command to `docs/handoff/<slug>/.verify` (one line, the command only — no
+     prose, no pass-signal annotation).
+   - If it is **several commands** (or not expressible as one), **do not invent a
+     multi-command format**: leave `.verify` uncreated and note in the report that
+     the Stop gate stays inactive until the author wraps the commands in a script
+     and points `.verify` at it (consistent with `docs/hooks.md`).
+   - `.verify` is versioned (auditable) — stage it alongside the four files.
+
+4. **Update the registry** `docs/handoff/INDEX.md` — one **table row per slug**
+   under the `## Handoffs` table: `| <slug> | <status> | <depends-on> | <date> | <note> |`.
+   - `status` ∈ {`todo`, `in-progress`, `blocked`, `done`} — a fresh handoff is
+     normally `todo` (or `in-progress` if you're seeding partial work).
+   - `depends-on` = comma-separated slugs that must be `done` first, or `—`.
+   - `date` = today (`%Y-%m-%d`); `note` = short human-readable status.
+   Create the file with the schema header if missing (see the existing INDEX for
+   the format). **Update the existing row** for this slug instead of appending a
+   duplicate.
 
 5. **Report**: print the folder path and the resume hint `/resume <slug>`.
 
@@ -48,7 +69,7 @@ Header banner at the top of all four files (substitute real values):
 > Handoff doc for task `<slug>`. Author: <your model, e.g. Claude Opus 4.7>. Updated: <YYYY-MM-DD HH:MM>.
 > IMPLEMENTING AGENT: read CONTEXT.md → PLAN.md → PROGRESS.md → DECISIONS.md before starting.
 > Update PROGRESS.md after every meaningful change, and record any deviation from PLAN.md in DECISIONS.md.
-> Spec written by <planner model> against commit `<sha>` on branch `<branch>`; source plan: `~/.claude/plans/<...>.md`. If HEAD has moved far past this, reconcile before trusting the spec.
+> Spec written by <planner model> against commit `<sha>` on branch `<branch>`; source plan: `<resolved-plan-path>`. If HEAD has moved far past this, reconcile before trusting the spec.
 ```
 
 The 4th line is **provenance/freshness**: it pins the planner model, the exact
@@ -65,7 +86,8 @@ reflects one moment in time — making that moment explicit lets the implementer
 
 ### PLAN.md — the spec (author → implementer)
 - **Goal** and **non-goals / scope**.
-- **Source plan**: link the `~/.claude/plans/<...>.md` path.
+- **Source plan**: link the resolved source-plan path (see step 2 — may be
+  `~/.claude/plans/`, a repo draft, or a path you were given).
 - **Ordered steps**, each concrete enough to execute.
 - **Verification** (mandatory, not prose): the exact copy-pasteable command(s)
   the implementer runs to prove the work is done, plus the **observable pass

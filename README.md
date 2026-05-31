@@ -15,16 +15,25 @@ where the last one left off, without trusting a stale summary.
 ## The cycle
 
 ```
-plan (Opus) → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /handoff → /resume → /implement → /code-review
 ```
 
 | Command | Who runs it | What it does |
 |---|---|---|
+| **`/plan`** | Opus | The formal entry point: creates the task branch (so you avoid working on `main`), drives the planning, writes a draft to `~/.claude/plans/<slug>.md` with a runnable **Verification** block, and runs a self-critique pass over it. Optional, and tool-agnostic — Codex can skip it and bring its own plan. |
 | **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers into the plan **before** the handoff. Optional: skip it for one-sentence changes. |
 | **`/handoff`** | Opus | Dumps context + spec into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) and registers the slug in `INDEX.md`. |
 | **`/resume`** | any agent | Rebuilds working context and briefs the user. **Does not implement.** |
 | **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan. |
 | **`/code-review`** | any agent | The adversarial gate: does the diff satisfy every requirement in `PLAN.md`? |
+
+Two more commands sit **outside** the linear cycle — one for scale, one for
+lifecycle:
+
+| Command | Who runs it | What it does |
+|---|---|---|
+| **`/dispatch`** | Opus (Claude-only) | Runs several slugs **in parallel**: topologically orders the `INDEX.md` DAG, fans the ready wave out into isolated git worktrees, and proposes a reviewed merge per wave. Opt-in, never auto-merges. See [`docs/orchestration.md`](docs/orchestration.md). |
+| **`/archive`** | any agent | Retires a `done` slug by `git mv`-ing its package into `docs/handoff/_archive/` and marking its `INDEX.md` row archived. **Manual and explicit — never a delete:** the record is the point. |
 
 The whole point is that the **spec lives on disk**, not in one session's memory.
 The planner writes it once; any implementer — even one that has never seen the
@@ -43,7 +52,13 @@ Each task gets a folder `docs/handoff/<slug>/` with four files:
 | `PROGRESS.md` | Live status: a checklist mirroring PLAN steps (`- [ ]` / `- [x]` / `🚧` / `⛔`) + a reverse-chronological work log. | implementer |
 | `DECISIONS.md` | Decisions taken, deviations, and *Open questions for the spec author*. | implementer → planner |
 
-`docs/handoff/INDEX.md` is the registry — one line per handoff.
+`docs/handoff/INDEX.md` is the registry — a **structured, machine-parseable
+table** (`| slug | status | depends-on | updated | note |`), one row per slug.
+Because `status` and `depends-on` are parseable (`awk -F'|'` / `grep`),
+orchestration can compute the ready wave — which is exactly what `/dispatch`
+runs on. A finished slug is retired with `/archive` into `docs/handoff/_archive/`
+(history kept, never deleted); it drops out of the "most recently touched"
+heuristic automatically so it stops competing with live work.
 
 Every file opens with a **provenance banner**: the planner model, the commit SHA
 the spec was written against, and the source-plan path. That line is how an
@@ -111,21 +126,28 @@ Both are inactive until you opt in — Codex users ignore this entirely.
 
 **Size each slug** to fit in a single implementer context window. If a plan is
 big, split it into parallel slugs (the kit supports them) rather than one giant
-slug that rots the implementer's context halfway through.
+slug that rots the implementer's context halfway through. To actually *run* those
+slugs concurrently, `/dispatch` fans the ready wave out into isolated worktrees
+with capped concurrency and a reviewed merge per wave — see
+[`docs/orchestration.md`](docs/orchestration.md).
 
 ---
 
 ## Repository layout
 
 ```
-.claude/commands/      clarify · handoff · resume · implement   (the slash commands)
+.claude/commands/      plan · clarify · handoff · resume · implement · dispatch · archive
 .claude/settings.json.example   optional hook wiring
 hooks/                 progress-sync.sh · verify-gate.sh        (Claude-only enforcement)
 docs/handoff/<slug>/   CONTEXT · PLAN · PROGRESS · DECISIONS    (per-task handoffs)
-docs/handoff/INDEX.md  the handoff registry
+docs/handoff/INDEX.md  the structured handoff registry (status + depends-on)
+docs/handoff/_archive/ retired done slugs (history, kept out of the live glob)
+docs/orchestration.md  /dispatch: parallel slugs in isolated worktrees (Claude-only)
 docs/hooks.md          how the optional enforcement layer works
+docs/plans/            the kit's own improvement backlog (dogfooded)
 AGENTS.md              the shared handoff contract (read by any tool)
 CLAUDE.md              Claude/Opus-specific guidance as spec author
+CLAUDE.copy.md         merge guide for dropping the kit into an existing project
 ```
 
 This repo **dogfoods itself**: its own changes are planned and implemented
@@ -137,7 +159,8 @@ through the kit, with live handoffs under `docs/handoff/`.
 
 1. Drop the `.claude/commands/` files into a project (or use this repo as a
    template).
-2. Plan a change with Opus, then run **`/clarify`** to pin down the edges.
+2. Run **`/plan <task>`** with Opus to branch and draft the spec, then
+   **`/clarify`** to pin down the edges.
 3. **`/handoff <slug>`** to write the package.
 4. Hand the slug to your implementer — a fresh Claude or Codex — and run
    **`/resume <slug>`** to rebuild context, then **`/implement <slug>`** to do
