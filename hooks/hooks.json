@@ -1,0 +1,30 @@
+{
+  "//": "Plugin-side wiring of the optional Claude-only enforcement hooks. Active",
+  "//2": "when the kit is installed as a plugin. Both stay inert until you opt in:",
+  "//3": "progress-sync only fires on commits that stage code, verify-gate only when",
+  "//4": "a docs/handoff/<slug>/.verify file exists. See docs/hooks.md. The non-plugin",
+  "//5": "equivalent (using $CLAUDE_PROJECT_DIR) lives in .claude/settings.json.example.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/progress-sync.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/verify-gate.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
