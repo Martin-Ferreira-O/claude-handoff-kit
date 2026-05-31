@@ -21,7 +21,9 @@ Target handoff (optional slug): `$ARGUMENTS`
    - If `docs/handoff/` is empty or missing, say so and stop.
 
 2. **Read all four files in order**: CONTEXT.md → PLAN.md → PROGRESS.md →
-   DECISIONS.md.
+   DECISIONS.md. Also read the slug's **row** in `docs/handoff/INDEX.md` for its
+   registry `status` (`todo`/`in-progress`/`blocked`/`done`) and `depends-on`;
+   if the row's status contradicts what PROGRESS shows, flag it as drift.
 
 3. **Reconcile with the repo, and check the package against itself.** Run
    `git status`, `git log --oneline -10`, and `git diff --stat` to detect work
@@ -43,7 +45,8 @@ Target handoff (optional slug): `$ARGUMENTS`
    continues.
 
 5. **Brief the user — then stop.** Output a concise summary:
-   - **Where we are**: done vs. pending, from PROGRESS.md.
+   - **Where we are**: done vs. pending, from PROGRESS.md (and the INDEX row's
+     `status`/`depends-on`).
    - **Next step**: the first unchecked item in PLAN.md.
    - **Decision queue**: the open questions from step 4 (and who owns them).
    - **Drift**: spec-vs-tree and internal-consistency mismatches found in step 3.

@@ -72,10 +72,12 @@ Target handoff (optional slug): `$ARGUMENTS`
    author can review. Put anything that needs Opus's input under *Open questions
    for the spec author*. Do not rewrite `PLAN.md` — it is read-mostly.
 
-8. **Update the registry.** Edit the handoff's line in `docs/handoff/INDEX.md`
-   to reflect the new status and date — update the existing line, don't append a
-   duplicate. This update rides along with the next step's commit (or a final
-   bookkeeping commit if there are no more steps).
+8. **Update the registry.** Edit the handoff's **row** in `docs/handoff/INDEX.md`
+   (the `## Handoffs` table) to reflect the new `status` and `updated` date —
+   flip `status` to `in-progress` while steps remain, or `done` once the plan is
+   fully implemented and verified; refresh the `note`. Update the existing row,
+   don't append a duplicate. This update rides along with the next step's commit
+   (or a final bookkeeping commit if there are no more steps).
 
 9. **Review against the spec (fresh-context gate).** Before reporting done — once
    the PLAN steps you set out to finish are committed — run an adversarial review

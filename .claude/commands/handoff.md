@@ -34,9 +34,15 @@ Argument (task slug or short description): `$ARGUMENTS`
    starts with the header banner. Fill them with real content — never leave a
    section as an empty placeholder. If something is unknown, say so explicitly.
 
-4. **Update the registry** `docs/handoff/INDEX.md` — one line per handoff:
-   `` - `<slug>` — <one-line status> — updated <date> ``. Create the file if
-   missing. Update the existing line instead of appending a duplicate.
+4. **Update the registry** `docs/handoff/INDEX.md` — one **table row per slug**
+   under the `## Handoffs` table: `| <slug> | <status> | <depends-on> | <date> | <note> |`.
+   - `status` ∈ {`todo`, `in-progress`, `blocked`, `done`} — a fresh handoff is
+     normally `todo` (or `in-progress` if you're seeding partial work).
+   - `depends-on` = comma-separated slugs that must be `done` first, or `—`.
+   - `date` = today (`%Y-%m-%d`); `note` = short human-readable status.
+   Create the file with the schema header if missing (see the existing INDEX for
+   the format). **Update the existing row** for this slug instead of appending a
+   duplicate.
 
 5. **Report**: print the folder path and the resume hint `/resume <slug>`.
 

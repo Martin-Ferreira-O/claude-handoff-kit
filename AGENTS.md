@@ -3,6 +3,8 @@
 ## Handoff & Shared State
 Active task handoffs live in `docs/handoff/<slug>/`, each containing `CONTEXT.md`, `PLAN.md`, `PROGRESS.md`, and `DECISIONS.md`. `docs/handoff/INDEX.md` registers them.
 
+`INDEX.md` is a markdown table, **one row per slug**, both human-readable and machine-parseable (`awk -F'|'` / `grep`): `| slug | status | depends-on | updated | note |`. `status` ∈ {`todo`, `in-progress`, `blocked`, `done`}; `depends-on` is a comma-separated list of slugs that must be `done` first (or `—`). `/handoff` seeds the row, `/implement` advances its `status`, `/resume` reads it. Update the existing row — never append a duplicate.
+
 - **Before starting work on a task, read its handoff folder** (CONTEXT → PLAN → PROGRESS → DECISIONS). `PLAN.md` is the spec authored by the planning agent — implement against it and do not silently diverge.
 - **Re-derive, don't just recall.** Open the files listed under CONTEXT's *Read first* and confirm they still match the spec before trusting its summary; the banner's provenance line (planner model + commit SHA the spec was written against) tells you how stale the map may be.
 - **`PLAN.md` ends with a runnable `Verification` block** — the exact command(s) plus the observable pass signal. A step is "done" only when its verification command actually passes; report the real output, never assume.
