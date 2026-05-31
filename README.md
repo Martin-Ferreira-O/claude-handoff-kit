@@ -15,11 +15,12 @@ where the last one left off, without trusting a stale summary.
 ## The cycle
 
 ```
-plan (Opus) → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /handoff → /resume → /implement → /code-review
 ```
 
 | Command | Who runs it | What it does |
 |---|---|---|
+| **`/plan`** | Opus | The formal entry point: creates the task branch (so you avoid working on `main`), drives the planning, writes a draft to `~/.claude/plans/<slug>.md` with a runnable **Verification** block, and runs a self-critique pass over it. Optional, and tool-agnostic — Codex can skip it and bring its own plan. |
 | **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers into the plan **before** the handoff. Optional: skip it for one-sentence changes. |
 | **`/handoff`** | Opus | Dumps context + spec into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) and registers the slug in `INDEX.md`. |
 | **`/resume`** | any agent | Rebuilds working context and briefs the user. **Does not implement.** |
@@ -118,7 +119,7 @@ slug that rots the implementer's context halfway through.
 ## Repository layout
 
 ```
-.claude/commands/      clarify · handoff · resume · implement   (the slash commands)
+.claude/commands/      plan · clarify · handoff · resume · implement   (the slash commands)
 .claude/settings.json.example   optional hook wiring
 hooks/                 progress-sync.sh · verify-gate.sh        (Claude-only enforcement)
 docs/handoff/<slug>/   CONTEXT · PLAN · PROGRESS · DECISIONS    (per-task handoffs)
@@ -137,7 +138,8 @@ through the kit, with live handoffs under `docs/handoff/`.
 
 1. Drop the `.claude/commands/` files into a project (or use this repo as a
    template).
-2. Plan a change with Opus, then run **`/clarify`** to pin down the edges.
+2. Run **`/plan <task>`** with Opus to branch and draft the spec, then
+   **`/clarify`** to pin down the edges.
 3. **`/handoff <slug>`** to write the package.
 4. Hand the slug to your implementer — a fresh Claude or Codex — and run
    **`/resume <slug>`** to rebuild context, then **`/implement <slug>`** to do

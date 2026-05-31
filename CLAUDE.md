@@ -13,9 +13,15 @@ específica para Claude/Opus como autor del spec.
 ## El ciclo
 
 ```
-plan (Opus) → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /handoff → /resume → /implement → /code-review
 ```
 
+- **/plan** — Opus arranca el ciclo: crea la rama de tarea (para no trabajar en
+  `main`), conduce el planning y escribe un draft en `~/.claude/plans/<slug>.md`
+  con bloque **Verification**, y lo pasa por una **auto-crítica** antes del
+  handoff. Es **opcional**: corre **fuera** del plan mode nativo (que es
+  read-only y no puede ramificar) y no duplica `/clarify` — ante ambigüedad real,
+  deriva a él. Codex puede saltárselo y traer su propio plan.
 - **/clarify** — Opus entrevista al usuario (`AskUserQuestion`) sobre las partes
   difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas en el
   Goal/Non-goals del plan **antes** del handoff. Es **opcional**: si el cambio
