@@ -34,15 +34,28 @@ independent.
 
 ## `progress-sync.sh` — PROGRESS-sync commit guard
 
-Intercepts `git commit` Bash calls. If the staged set contains any path **outside**
-`docs/handoff/` ("code") but **no** `docs/handoff/<slug>/PROGRESS.md`, it exits 2
-to block the commit and tells Claude to update + stage PROGRESS first. A
-docs-only or PROGRESS-included commit passes. Requires `python3` (used only to
-parse the hook's stdin JSON robustly).
+Intercepts `git commit` Bash calls. If the staged set contains any **code** path
+but **no** `docs/handoff/<slug>/PROGRESS.md`, it exits 2 to block the commit and
+tells Claude to update + stage PROGRESS first. A docs-only or PROGRESS-included
+commit passes. Requires `python3` (used only to parse the hook's stdin JSON
+robustly).
 
-Heuristic, by design: "code" = anything not under `docs/handoff/`. That keeps the
-rule simple and dependency-light; tune the `grep` patterns in the script if your
-repo keeps non-doc files under `docs/`.
+**What counts as "code".** Anything that is *not* pure documentation. Pure docs —
+which never trigger the guard — are anything under `docs/` (plans, `hooks.md`, the
+handoff folder itself) plus root-level `*.md` (`README.md`, `CLAUDE.md`,
+`AGENTS.md`). This excludes the kit's own bookkeeping commits, which the older
+"anything outside `docs/handoff/` is code" rule flagged as false positives. The
+classification is the `grep` patterns near the top of the script — tune them if
+your repo keeps code under `docs/` or docs outside it.
+
+**Branch-aware slug matching.** When a PROGRESS *is* staged, the guard also checks
+it is the **right** slug's. If the current branch names a slug (`<slug>` or
+`*/<slug>`, same resolution as `verify-gate.sh`), the staged PROGRESS must be
+`docs/handoff/<slug>/PROGRESS.md` — committing slug-a's code while updating
+slug-b's PROGRESS is the same gap the guard exists to catch, and aligns with the
+kit's one-branch-per-slug model. If the branch matches no handoff folder, any
+staged PROGRESS is accepted, so the stricter check adds no friction outside the
+normal flow.
 
 ## `verify-gate.sh` — Stop verification gate (off by default)
 
