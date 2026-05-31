@@ -31,10 +31,15 @@ específica para Claude/Opus como autor del spec.
 - **/resume** — reconstruye contexto y hace el briefing; **no implementa**.
 - **/implement** — ejecuta `PLAN.md` paso a paso, con un commit atómico por
   paso verificado (código + actualizaciones de PROGRESS/DECISIONS juntos). Antes
-  del reporte final corre un **gate de review contra `PLAN.md`** (skill
-  `/code-review` o subagente, en contexto fresco): "¿está implementado cada
+  del reporte final corre un **gate de review contra `PLAN.md`** en **contexto
+  realmente fresco** — el revisor ve **solo el diff + `PLAN.md`**, no la sesión
+  del implementador, para no heredar sus supuestos: "¿está implementado cada
   requisito y pasa el comando de **Verification**? Reportá gaps, no preferencias
-  de estilo." El resultado queda en una línea de PROGRESS.
+  de estilo." El mecanismo es por-herramienta: **preferí un subagente / sesión
+  limpia** (la garantía real); correr `/code-review` en la misma sesión es el
+  **fallback de menor garantía**, solo si no hay subagente disponible. El
+  resultado queda en una línea de PROGRESS que distingue `review (fresh)` de
+  `review (in-session)` según el mecanismo usado.
 
 ## Roles (no cruzar las líneas)
 

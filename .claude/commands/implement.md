@@ -104,12 +104,22 @@ Target handoff (optional slug): `$ARGUMENTS`
    automatically here — leave it to the user.
 
 9. **Review against the spec (fresh-context gate).** Before reporting done — once
-   the PLAN steps you set out to finish are committed — run an adversarial review
-   in a fresh context that sees only the diff and `PLAN.md`. Use whatever
-   fresh-context reviewer your tool offers — on Claude the bundled `/code-review`
-   skill or a subagent; on Codex or another agent, its equivalent reviewer (or a
-   clean session handed only the diff + PLAN). The gate is mandatory; the
-   mechanism is not Claude-specific. Prompt shape:
+   the PLAN steps you set out to finish are committed — run an adversarial review.
+   The guarantee that matters is **truly fresh context**: the reviewer must see
+   **only the diff and `PLAN.md`**, not your implementation session, so it can't
+   inherit the assumptions you made while writing the code. The gate is mandatory;
+   the mechanism is per-tool:
+   - **Preferred — a dedicated reviewer in clean context.** Hand a fresh agent
+     **only the diff + `PLAN.md`** and nothing else. On Claude, spawn a review
+     **subagent** (clean context window); on Codex or another agent, start a clean
+     session seeded with just those two inputs. This is the real fresh-context
+     gate — use it whenever a subagent/clean session is available.
+   - **Fallback — `/code-review` in the same session.** Running the bundled
+     `/code-review` skill inline is the **lower-guarantee** path: it reuses the
+     current session, which already carries the implementer's context, so it's
+     only acceptable when no subagent/clean session is available.
+
+   Prompt shape (identical either way):
 
    > Review this diff **against `PLAN.md`**. Verify every requirement is
    > implemented and the **Verification** command(s) in PLAN actually pass.
@@ -118,10 +128,13 @@ Target handoff (optional slug): `$ARGUMENTS`
 
    The "report gaps, not style" framing is deliberate: a gap-hungry reviewer
    otherwise drives over-engineering past the spec. Record the outcome as a
-   PROGRESS work-log line (`… — review against PLAN: <pass / N gaps>`). If the
-   review finds a real gap in committed work, fix it as its own verified+committed
-   step; if it surfaces something the spec itself got wrong, log it under
-   *Open questions for the spec author* in DECISIONS.md rather than redesigning.
+   PROGRESS work-log line, **tagging which mechanism ran** so the guarantee is
+   auditable: `… — review (fresh) against PLAN: <pass / N gaps>` for a clean
+   subagent/session, or `… — review (in-session) against PLAN: <pass / N gaps>`
+   for the `/code-review` fallback. If the review finds a real gap in committed
+   work, fix it as its own verified+committed step; if it surfaces something the
+   spec itself got wrong, log it under *Open questions for the spec author* in
+   DECISIONS.md rather than redesigning.
 
 10. **Report.** Summarize:
    - **Done this session**: steps completed, with verification result and the
