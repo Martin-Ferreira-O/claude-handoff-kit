@@ -142,10 +142,10 @@ and reviewers are imported verbatim from [Everything Claude Code](https://github
 
 It's built to **save tokens**: skills load lazily (progressive disclosure), the
 reviewers run in their own context window, and they're pinned to `model: sonnet`
-so the review gate stays cheap. Install it as a plugin
-(`/plugin install handoff-kit-django`) or with the script
-(`./install.sh --target <repo> --with-django`). Don't install it in non-Django
-repos.
+so the review gate stays cheap. It installs alongside the core kit as a second
+plugin (`/plugin install handoff-kit-django@claude-handoff-kit`) or with the
+script (`./install.sh --target <repo> --with-django`) — see
+[Install](#install) for both paths. Don't install it in non-Django repos.
 
 ---
 
@@ -231,6 +231,19 @@ optionally, the `CLAUDE.md` workflow block. It's idempotent, so re-run it any ti
 to refresh an updated contract. To pick up a newer version of the kit later,
 `/plugin marketplace update claude-handoff-kit` and re-run `/handoff-init`.
 
+**Optional Django layer.** The same marketplace also ships the `handoff-kit-django`
+plugin — domain skills + reviewer subagents for Django repos (see [Optional Django
+layer](#optional-django-layer)). Install it **in addition to** the core plugin,
+and only in a Django project:
+
+```
+/plugin install handoff-kit-django@claude-handoff-kit
+```
+
+No extra `/handoff-init` is needed — the layer contributes skills, subagents, and
+the `/django-review` command, which `/implement`'s review gate picks up
+automatically.
+
 ### Codex / any agent (script, tool-agnostic)
 
 ```sh
@@ -240,9 +253,16 @@ curl -fsSL https://raw.githubusercontent.com/Martin-Ferreira-O/claude-handoff-ki
 
 The script copies `.claude/commands/` (and, with `--with-hooks`, the hooks) into
 the target, then seeds `AGENTS.md` + `docs/handoff/INDEX.md` the same way
-`/handoff-init` does. It never clobbers your files without `--force` and never
-duplicates the contract block on re-runs. Your implementer (Codex or anyone)
-reads `AGENTS.md` and follows the cycle.
+`/handoff-init` does. Add `--with-django` to also copy the Django layer's skills
+and reviewer subagents into `.claude/{skills,agents}/` (only in Django repos):
+
+```sh
+./install.sh --target /path/to/project --with-django
+```
+
+It never clobbers your files without `--force` and never duplicates the contract
+block on re-runs. Your implementer (Codex or anyone) reads `AGENTS.md` and follows
+the cycle.
 
 > Why `/handoff-init` and not the plugin alone? Claude Code does **not** load a
 > plugin's `AGENTS.md`/`CLAUDE.md` as project context — plugins contribute
