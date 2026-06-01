@@ -130,6 +130,25 @@ Both are inactive until you opt in — Codex users ignore this entirely.
 
 ---
 
+## Optional Django layer
+
+The core kit is language-agnostic. For **Django** repos there's an opt-in layer —
+[`plugins/handoff-kit-django/`](plugins/handoff-kit-django/) — that adds domain
+skills (`django-patterns`, `django-security`, `django-tdd`, `django-verification`)
+and reviewer subagents (`python-reviewer`, `security-reviewer`, `database-reviewer`),
+plus a `/django-review` command that routes a diff to the right reviewer. Skills
+and reviewers are imported verbatim from [Everything Claude Code](https://github.com/affaan-m/ECC)
+(MIT; see the layer's `ATTRIBUTION.md`).
+
+It's built to **save tokens**: skills load lazily (progressive disclosure), the
+reviewers run in their own context window, and they're pinned to `model: sonnet`
+so the review gate stays cheap. Install it as a plugin
+(`/plugin install handoff-kit-django`) or with the script
+(`./install.sh --target <repo> --with-django`). Don't install it in non-Django
+repos.
+
+---
+
 ## When to hand off
 
 - You're running low on context/tokens on a long task.
@@ -152,6 +171,7 @@ with capped concurrency and a reviewed merge per wave — see
 .claude-plugin/marketplace.json self-marketplace, so `/plugin marketplace add` works
 .claude/commands/      plan · clarify · handoff · resume · implement · dispatch · archive · handoff-init
 .claude/settings.json.example   optional hook wiring (non-plugin / script path)
+plugins/handoff-kit-django/     optional Django layer: skills + reviewer subagents + /django-review (imported from ECC, MIT)
 hooks/                 progress-sync.sh · verify-gate.sh · hooks.json  (Claude-only enforcement)
 templates/             contract snippets seeded by /handoff-init & install.sh (single source)
 install.sh             tool-agnostic installer (curl-able), for Codex / any agent

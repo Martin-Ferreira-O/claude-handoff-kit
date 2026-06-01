@@ -114,6 +114,14 @@ Target handoff (optional slug): `$ARGUMENTS`
      **subagent** (clean context window); on Codex or another agent, start a clean
      session seeded with just those two inputs. This is the real fresh-context
      gate — use it whenever a subagent/clean session is available.
+     - **Django repos with the optional Django layer installed** (the
+       `handoff-kit-django` plugin / `--with-django` install — its
+       `python-reviewer`, `security-reviewer`, `database-reviewer` subagents are
+       available): prefer the **specialized reviewer** that fits the diff over a
+       generic one — migrations/`models.py`/schema → `database-reviewer`;
+       auth/`settings.py`/user input/serializers → `security-reviewer`; other
+       `*.py` → `python-reviewer` (or run `/django-review`, which does this
+       routing). These run on `model: sonnet`, so the gate stays cheap.
    - **Fallback — `/code-review` in the same session.** Running the bundled
      `/code-review` skill inline is the **lower-guarantee** path: it reuses the
      current session, which already carries the implementer's context, so it's
