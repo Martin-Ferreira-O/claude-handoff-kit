@@ -7,6 +7,11 @@
       "name": "handoff-kit",
       "source": "./",
       "description": "File-based handoffs between a planning agent (Opus) and an implementer (Codex or a fresh Claude). Ships the /plan /clarify /handoff /resume /implement /dispatch /archive /handoff-init commands plus optional enforcement hooks."
+    },
+    {
+      "name": "handoff-kit-django",
+      "source": "./plugins/handoff-kit-django",
+      "description": "Optional Django layer: domain skills (patterns, security, TDD, verification) and reviewer subagents (python/security/database) imported from ECC, plus the /django-review command that wires them into the /implement fresh-context gate."
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "handoff-kit-django",
+  "displayName": "Handoff Kit — Django layer",
+  "version": "0.1.0",
+  "description": "Optional Django layer for the handoff kit: domain skills (patterns, security, TDD, verification) imported from ECC plus specialized reviewer subagents wired into the /implement fresh-context gate.",
+  "author": { "name": "Martin Ferreira" },
+  "repository": "https://github.com/Martin-Ferreira-O/claude-handoff-kit",
+  "license": "MIT",
+  "keywords": ["django", "python", "review", "skills", "subagents", "handoff"],
+  "commands": [
+    "./commands/django-review.md"
+  ]
+}
