@@ -13,6 +13,11 @@
 - [x] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
 
 ## Work log
+- 2026-06-14 16:51 — Claude Opus 4.8 (implementer) — review (fresh) against PLAN: pass (0 gaps).
+  Subagente Opus en contexto limpio (solo diff `5dd7dd7..HEAD` + `PLAN.md`), modelo ruteado
+  por dificultad del slug (banda 4-7 → Opus). Corrió las 5 greps de Verification (todas con su
+  pass signal) y los criterios de TASK-01..05; confirmó la nota del INDEX grep (2 matches =
+  schema de 5 columnas intacto, pre-existente, no regresión). Sin gaps de spec ni de estilo.
 - 2026-06-14 16:49 — Claude Opus 4.8 (implementer) — TASK-05: docs. `CLAUDE.md` — `/plan`
   y `/implement` bullets + nueva sección "Tres modos de ejecución (+ routing)".
   `docs/orchestration.md` — tabla de 3 modos, routing en el fan-out, caveat de costo
