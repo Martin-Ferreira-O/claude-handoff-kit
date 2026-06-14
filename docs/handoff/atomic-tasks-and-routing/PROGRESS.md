@@ -10,9 +10,17 @@
 - [x] TASK-02. `/plan` emite tareas atómicas + decompone en slugs (`plan.md`)
 - [x] TASK-03. Routing dinámico en `/dispatch` (`dispatch.md`)
 - [x] TASK-04. `/implement --delegate` opt-in + `Agent` en allowed-tools (`implement.md`)
-- [ ] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
+- [x] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
 
 ## Work log
+- 2026-06-14 16:49 — Claude Opus 4.8 (implementer) — TASK-05: docs. `CLAUDE.md` — `/plan`
+  y `/implement` bullets + nueva sección "Tres modos de ejecución (+ routing)".
+  `docs/orchestration.md` — tabla de 3 modos, routing en el fan-out, caveat de costo
+  corregido, y **ejemplo end-to-end** (Task Map → 4 slugs + DAG + routing por card).
+  `README.md` — filas `/implement` y `/dispatch` actualizadas, nota del Task card en "The
+  handoff package", `docs/routing.md` en el layout. Verify: greps de los 3 modos + ejemplo
+  → matches. Nota: la grep #5 del INDEX devuelve 2 (schema en prosa + header de tabla);
+  ambas son el schema de 5 columnas intacto — pre-existente, no regresión.
 - 2026-06-14 16:46 — Claude Opus 4.8 (implementer) — TASK-04: `implement.md` — `Agent`
   sumado a `allowed-tools` (gated, Claude-only); `argument-hint` → `[--delegate] [task-slug]`.
   Nueva sección **Execution mode** documentando `--delegate` (1 subagente fresco con modelo

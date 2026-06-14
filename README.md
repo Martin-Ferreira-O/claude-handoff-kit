@@ -27,7 +27,7 @@ any point and skip the steps you don't need.
 | **`/plan`** | Opus | The single entry point: creates the task branch (so you avoid working on `main`), drives the planning, runs a self-critique pass, and **writes the whole handoff package** into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) with a runnable **Verification** block, derives `.verify`, and seeds the `INDEX.md` row. **Absorbed `/handoff`** — no second, context-rederiving step. Optional and tool-agnostic: another agent can bring its own draft via `/plan <slug> <path>`. |
 | **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers **directly into the package `PLAN.md`** (runs after `/plan`). Optional: skip it for one-sentence changes. |
 | **`/resume`** | any agent | **Optional, read-only briefing.** Rebuilds context and reports where the task stands — then **stops, does not implement**. |
-| **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan. **Re-derives context itself**, so `/resume` is not a prerequisite. |
+| **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan (with the reviewer's model routed by the slug's difficulty). Opt-in **`--delegate`** hands the slug to **one** fresh subagent (model routed by its Task card) while this session orchestrates and reviews. **Re-derives context itself**, so `/resume` is not a prerequisite. |
 | **`/code-review`** | any agent | The adversarial gate: does the diff satisfy every requirement in `PLAN.md`? |
 
 Two more commands sit **outside** the linear cycle — one for scale, one for
@@ -35,7 +35,7 @@ lifecycle:
 
 | Command | Who runs it | What it does |
 |---|---|---|
-| **`/dispatch`** | Opus (Claude-only) | Runs several slugs **in parallel**: topologically orders the `INDEX.md` DAG, fans the ready wave out into isolated git worktrees, and proposes a reviewed merge per wave. Opt-in, never auto-merges. See [`docs/orchestration.md`](docs/orchestration.md). |
+| **`/dispatch`** | Opus (Claude-only) | Runs several slugs **in parallel**: topologically orders the `INDEX.md` DAG, fans the ready wave out into isolated git worktrees **with each slug's model routed by its Task card** ([`docs/routing.md`](docs/routing.md)), and proposes a reviewed merge per wave. Opt-in, never auto-merges. See [`docs/orchestration.md`](docs/orchestration.md). |
 | **`/archive`** | any agent | Retires a `done` slug by `git mv`-ing its package into `docs/handoff/_archive/` and marking its `INDEX.md` row archived. **Manual and explicit — never a delete:** the record is the point. |
 
 The whole point is that the **spec lives on disk**, not in one session's memory.
@@ -75,6 +75,12 @@ Every file opens with a **provenance banner**: the planner model, the commit SHA
 the spec was written against, and the source-plan path. That line is how an
 implementer detects *"this spec was written 40 commits ago — reconcile before
 trusting it"* instead of building on a stale map.
+
+`PLAN.md` also carries a **Task card** per atomic task — difficulty (1-10), routed
+model, and effort — so `/dispatch` and `/implement --delegate` pick the right model
+per slug **without touching the `INDEX.md` schema** (model/effort live in the card,
+parseable with `grep`). The 5-axis difficulty rubric and the routing table live in
+[`docs/routing.md`](docs/routing.md), shared by `/plan` and `/dispatch`.
 
 ---
 
@@ -178,6 +184,7 @@ docs/handoff/<slug>/   CONTEXT · PLAN · PROGRESS · DECISIONS    (per-task han
 docs/handoff/INDEX.md  the structured handoff registry (status + depends-on)
 docs/handoff/_archive/ retired done slugs (history, kept out of the live glob)
 docs/orchestration.md  /dispatch: parallel slugs in isolated worktrees (Claude-only)
+docs/routing.md        difficulty rubric (1-10) + model/effort routing table (shared by /plan & /dispatch)
 docs/hooks.md          how the optional enforcement layer works
 docs/plans/            the kit's own improvement backlog (dogfooded)
 AGENTS.md              the shared handoff contract (read by any tool)

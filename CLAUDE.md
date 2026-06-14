@@ -26,6 +26,10 @@ específica para Claude/Opus como autor del spec.
   `/clarify` — ante ambigüedad real, deriva a él. Otro agente puede saltárselo y
   traer su propio draft, pasándolo como segundo argumento (`/plan <slug> <path>`)
   para que `/plan` lo empaquete, o materializando el paquete a mano según `AGENTS.md`.
+  Además **scorea cada tarea** (Task Map: dificultad 1-10 → modelo/effort, schema del
+  Task card en `AGENTS.md` + rúbrica en `docs/routing.md`) y, ante una tarea
+  multi-unidad de **archivos disjuntos**, **propone y confirma** (`AskUserQuestion`)
+  partirla en **slugs paralelos** (declinar → 1 slug).
 - **/clarify** — Opus entrevista al usuario (`AskUserQuestion`) sobre las partes
   difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas
   **directo en el `PLAN.md` del paquete** (Goal/Non-goals + sección *Clarifications*).
@@ -42,7 +46,30 @@ específica para Claude/Opus como autor del spec.
   limpia** (la garantía real); correr `/code-review` en la misma sesión es el
   **fallback de menor garantía**, solo si no hay subagente disponible. El
   resultado queda en una línea de PROGRESS que distingue `review (fresh)` de
-  `review (in-session)` según el mecanismo usado.
+  `review (in-session)` según el mecanismo usado. Tiene un modo opt-in **`/implement
+  --delegate <slug>`** (Claude-only) que delega el slug a **un** subagente fresco desde
+  la misma sesión (la principal queda de orquestador/reviewer), con el modelo ruteado
+  por el Task card; el **reviewer del gate** también se rutea por la dificultad del
+  slug. El modo default (in-session) no cambia.
+
+## Tres modos de ejecución (+ routing de modelo)
+
+Una vez que el paquete existe hay **tres formas de ejecutarlo** — todas conviven,
+elegís por tarea:
+
+- **In-session (default, portable).** `/implement <slug>` (o un Claude/Codex fresco)
+  corre el slug paso a paso en la sesión actual. Máximo control; única opción para Codex.
+- **`--delegate` (opt-in, Claude-only).** `/implement --delegate <slug>` delega **un**
+  slug a un subagente fresco desde tu sesión; la principal orquesta y revisa. Mata la
+  fricción de "abrir otra terminal" sin perder el contexto limpio.
+- **`/dispatch` (opt-in, Claude-only).** Orquesta una **oleada** de slugs paralelos en
+  worktrees aislados (ver `docs/orchestration.md`).
+
+Los dos modos Claude-only **rutean el modelo del implementador** por el Task card de
+cada slug — **1-3 Sonnet · 4-7 Opus 4.8 medium · 8-10 Opus 4.8 max** (rúbrica de 5 ejes
++ tabla en `docs/routing.md`; schema del card en `AGENTS.md`). El `effort` se transmite
+como guía en el prompt, no es un dial del harness. El **reviewer del gate** usa la misma
+tabla según la dificultad del slug.
 
 ## Roles (no cruzar las líneas)
 
