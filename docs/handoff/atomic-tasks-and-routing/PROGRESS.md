@@ -8,11 +8,17 @@
 ## Checklist
 - [x] TASK-01. Contrato de tarea atómica + rúbrica de routing (`AGENTS.md`, `docs/routing.md`)
 - [x] TASK-02. `/plan` emite tareas atómicas + decompone en slugs (`plan.md`)
-- [ ] TASK-03. Routing dinámico en `/dispatch` (`dispatch.md`)
+- [x] TASK-03. Routing dinámico en `/dispatch` (`dispatch.md`)
 - [ ] TASK-04. `/implement --delegate` opt-in + `Agent` en allowed-tools (`implement.md`)
 - [ ] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
 
 ## Work log
+- 2026-06-14 16:44 — Claude Opus 4.8 (implementer) — TASK-03: `dispatch.md` paso 4 ahora
+  **rutea el modelo por Task card** (lee `Modelo recomendado` → `model: opus`/`sonnet`,
+  default `sonnet` sin card, tolera `Modelo:` pelado), en vez del `model: "sonnet"` fijo;
+  `Effort recomendado` se transmite como guía en el prompt. Guardrail "implementadores en
+  Sonnet" corregido a "modelo ruteado (default Sonnet)". Verify: `grep -e 'Modelo
+  recomendado' -e 'rute' dispatch.md` → matches; `model: "opus"` presente. ✔
 - 2026-06-14 16:42 — Claude Opus 4.8 (implementer) — TASK-02: reestructurado `plan.md` de
   8 a 10 pasos. Nuevos pasos 2 (**Emitir el Task Map** con scoring 1-10 + routing) y 3
   (**Decidir la partición**: regla disjunta→N slugs / acoplado→1 slug, **proponer+confirmar
