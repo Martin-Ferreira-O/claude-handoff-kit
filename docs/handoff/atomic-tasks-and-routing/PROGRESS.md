@@ -7,12 +7,18 @@
 
 ## Checklist
 - [x] TASK-01. Contrato de tarea atómica + rúbrica de routing (`AGENTS.md`, `docs/routing.md`)
-- [ ] TASK-02. `/plan` emite tareas atómicas + decompone en slugs (`plan.md`)
+- [x] TASK-02. `/plan` emite tareas atómicas + decompone en slugs (`plan.md`)
 - [ ] TASK-03. Routing dinámico en `/dispatch` (`dispatch.md`)
 - [ ] TASK-04. `/implement --delegate` opt-in + `Agent` en allowed-tools (`implement.md`)
 - [ ] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
 
 ## Work log
+- 2026-06-14 16:42 — Claude Opus 4.8 (implementer) — TASK-02: reestructurado `plan.md` de
+  8 a 10 pasos. Nuevos pasos 2 (**Emitir el Task Map** con scoring 1-10 + routing) y 3
+  (**Decidir la partición**: regla disjunta→N slugs / acoplado→1 slug, **proponer+confirmar
+  con `AskUserQuestion`**, declinar→1 slug). Checklist de atomicidad agregado a la
+  auto-crítica (paso 7). Task card sumado a la plantilla de `PLAN.md`. Verify: greps de
+  `Task Map`/`Task card`/`AskUserQuestion`/`checklist de atomicidad`/`docs/routing.md` → matches. ✔
 - 2026-06-14 16:39 — Claude Opus 4.8 (implementer) — TASK-01: creado `docs/routing.md`
   (rúbrica de 5 ejes + tabla de routing 1-3/4-7/8-10) y agregada la sección **Atomic tasks
   & model routing (Task card)** a `AGENTS.md` (schema del card + resumen de routing con link).

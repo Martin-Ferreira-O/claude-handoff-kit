@@ -31,7 +31,8 @@ Tarea a planificar (y, opcionalmente, ruta a un draft existente): **$ARGUMENTS**
 
 1. **Orientar y juntar el estado real.** Corré `git status`, `git log --oneline -10`
    y `git diff --stat`. Leé `CLAUDE.md` y `AGENTS.md` para las convenciones del repo
-   (estructura de handoff, banner, reglas de roles). Corré `date "+%Y-%m-%d %H:%M"`
+   (estructura de handoff, banner, reglas de roles, **schema del Task card** y la
+   **rúbrica de routing** en `docs/routing.md`). Corré `date "+%Y-%m-%d %H:%M"`
    para timestamps reales. No asumas: re-derivá del estado real.
    - **Source plan (opcional).** Si ya existe un draft de plan acordado, ingerilo en
      vez de empezar de cero. Resolvé en orden: (a) una ruta pasada como argumento,
@@ -40,41 +41,76 @@ Tarea a planificar (y, opcionalmente, ruta a un draft existente): **$ARGUMENTS**
      exista y anotá cuál. Si no hay ninguno, el source plan es el `PLAN.md` que vas
      a autorar acá (autoría in situ).
 
-2. **Crear la rama de tarea.** Derivá un `<slug>` en kebab-case de la tarea.
-   - Si estás en `main`/`master`, creá y cambiá a la rama: `git checkout -b <slug>`.
+2. **Emitir el Task Map (tareas atómicas + scoring/routing).** Antes de materializar
+   nada, descomponé el trabajo en una lista ordenada de **TASK cards** (schema en
+   `AGENTS.md` §*Atomic tasks & model routing*). Por cada TASK:
+   - **Objetivo** en una frase, **Archivos** que toca, **Depende de** (TASK-id(s) o `—`),
+     **Criterios de éxito** verificables por comando, **Riesgos**.
+   - **Dificultad 1-10** con la rúbrica de 5 ejes de `docs/routing.md`, y de ahí
+     **Modelo recomendado** / **Effort recomendado** con la tabla de routing
+     (1-3 Sonnet · 4-7 Opus medium · 8-10 Opus max). Anotá el **Motivo** en una frase.
+   El Task Map es el insumo de la decisión de partición (paso 3) y termina embebido
+   como **Task card** en el/los `PLAN.md`.
+
+3. **Decidir la partición (1 slug vs. N slugs paralelos).** Aplicá la **regla de
+   partición** sobre el Task Map:
+   - **Multi-unidad con archivos disjuntos** → un slug por TASK (o grupo de TASKs):
+     **N paquetes + N filas INDEX** con el DAG `depends-on`. Es el caso que `/dispatch`
+     orquesta en paralelo.
+   - **Fuertemente acopladas o el total cabe en una ventana del implementador** →
+     **un** slug (comportamiento actual); los TASK cards van como **pasos ordenados**
+     de ese único `PLAN.md`.
+   - **Cuando la partición da varios slugs, proponé y confirmá antes de materializar.**
+     Mostrá la partición propuesta (N slugs + DAG) y pedí confirmación con
+     `AskUserQuestion`. **Si el usuario declina, caé a 1 slug** (todos los TASK cards
+     como pasos de un paquete). Una tarea chica de una sola frase **salta** esta
+     pregunta: es siempre 1 slug, idéntico al flujo de hoy.
+
+4. **Crear la(s) rama(s) de tarea.** Una **rama por slug**, en kebab-case.
+   - Si estás en `main`/`master`, creá y cambiá a la rama del (primer) slug:
+     `git checkout -b <slug>`. En una partición de N slugs, alcanza con sembrar ahora
+     la rama del slug en el que vas a trabajar; la rama de cada slug paralelo restante
+     la puede crear `/dispatch` al armar su worktree.
    - Si la rama ya existe, **reusala** (`git checkout <slug>`) — no la dupliques.
    - Si ya estás en una rama de tarea no-`main`, quedate en ella.
-   Registrá la rama elegida en el banner del paquete.
+   Registrá la rama elegida en el banner de cada paquete.
 
-3. **Resolver el slug del paquete.** `ls docs/handoff/` — si ya existe una carpeta
-   que claramente corresponde a esta tarea, **reusala y actualizá** en vez de crear
-   un duplicado. Un handoff por slug — se actualiza, no se duplica.
+5. **Resolver el/los slug(s) del paquete.** `ls docs/handoff/` — si ya existe una
+   carpeta que claramente corresponde a una tarea, **reusala y actualizá** en vez de
+   crear un duplicado. Un handoff por slug — se actualiza, no se duplica.
 
-4. **Escribir los cuatro archivos** en `docs/handoff/<slug>/` (plantillas abajo).
-   Cada uno arranca con el banner de cabecera. Llenalos con contenido real — nunca
-   dejes una sección como placeholder vacío; si algo se desconoce, decilo explícito.
-   El `PLAN.md` lleva:
+6. **Escribir los cuatro archivos** en `docs/handoff/<slug>/` por cada slug
+   (plantillas abajo). Cada uno arranca con el banner de cabecera. Llenalos con
+   contenido real — nunca dejes una sección como placeholder vacío; si algo se
+   desconoce, decilo explícito. El `PLAN.md` lleva:
    - **Goal** — qué se logra, en una o dos frases.
    - **Non-goals / scope** — qué queda explícitamente afuera.
+   - **Task card(s)** — la metadata del Task Map (paso 2) embebida: para un slug
+     **acoplado**, un card por paso ordenado; para un slug **paralelo**, su card al
+     inicio con línea `**Slug:**`. Es lo que `/dispatch` e `/implement --delegate`
+     leen para rutear el modelo.
    - **Ordered steps** — pasos en orden, cada uno **committeable por sí solo**.
    - **Verification** — un bloque **ejecutable**: el/los comando(s) exactos más la
      **señal observable de pass**. Nada de "verificar que anda": comando + qué se
      ve cuando pasa. Cerrá con un chequeo end-to-end que pruebe la feature, no solo
      que pasan los units.
 
-5. **Auto-crítica del plan** (la parte "mejorar planes"). Pasá el `PLAN.md` por este
+7. **Auto-crítica del plan** (la parte "mejorar planes"). Pasá el `PLAN.md` por este
    checklist y **aplicá las correcciones in situ** antes de cerrar:
    - ¿El bloque **Verification** es realmente ejecutable y observable?
    - ¿Hay **non-goals** explícitos que acoten el alcance?
-   - ¿El slug entra en **una sola ventana de contexto** del implementador? Si no,
-     proponé partirlo en **slugs paralelos** (el kit ya soporta slugs en paralelo)
-     en vez de un slug gigante.
    - ¿Cada paso es **committeable solo** (código + actualizaciones de estado juntos)?
+   - **Checklist de atomicidad** (por cada TASK card / slug): (a) objetivo en una
+     frase; (b) criterios de éxito **verificables por comando**; (c) **cabe en una
+     sola ventana de contexto** del implementador; (d) archivos **disjuntos** de sus
+     hermanas de la misma oleada; (e) **deps explícitas**. Si una TASK falla el
+     checklist, **partila o reescribila** (si excede una ventana, proponé partir el
+     slug en slugs paralelos — volvé al paso 3) antes de cerrar.
    Reportá al usuario el resultado del checklist con las correcciones aplicadas.
 
-6. **Derivar `.verify` del bloque Verification** (alimenta el Stop hook opcional —
-   ver `docs/hooks.md`). `.verify` es una *proyección* del PLAN; el PLAN sigue siendo
-   la única fuente de verdad.
+8. **Derivar `.verify` del bloque Verification** (alimenta el Stop hook opcional —
+   ver `docs/hooks.md`), **por cada slug**. `.verify` es una *proyección* del PLAN; el
+   PLAN sigue siendo la única fuente de verdad.
    - Si Verification es **un solo comando runnable**, escribí exactamente ese comando
      en `docs/handoff/<slug>/.verify` (una línea, solo el comando — sin prosa ni
      anotación de pass-signal).
@@ -84,19 +120,25 @@ Tarea a planificar (y, opcionalmente, ruta a un draft existente): **$ARGUMENTS**
      `.verify` ahí (consistente con `docs/hooks.md`).
    - `.verify` es versionado (auditable) — queda junto a los cuatro archivos.
 
-7. **Sembrar el registro** `docs/handoff/INDEX.md` — una **fila de tabla por slug**
+9. **Sembrar el registro** `docs/handoff/INDEX.md` — una **fila de tabla por slug**
    bajo la tabla `## Handoffs`: `| <slug> | <status> | <depends-on> | <fecha> | <nota> |`.
    - `status` ∈ {`todo`, `in-progress`, `blocked`, `done`} — un handoff fresco es
      normalmente `todo`.
    - `depends-on` = slugs separados por coma que deben estar `done` antes, o `—`.
+     **En una partición de N slugs, sembrá las N filas con el DAG** confirmado en el
+     paso 3.
    - `fecha` = hoy (`%Y-%m-%d`); `nota` = estado corto legible.
    Creá el archivo con el header de schema si falta (ver el INDEX existente para el
-   formato). **Actualizá la fila existente** para este slug en vez de duplicarla.
+   formato). **No cambies el esquema de la tabla** (5 columnas) — el modelo/effort vive
+   en el Task card, no en columnas nuevas. **Actualizá la fila existente** para cada
+   slug en vez de duplicarla.
 
-8. **Pasar el baton.** Imprimí la ruta del paquete y el siguiente paso:
+10. **Pasar el baton.** Imprimí la(s) ruta(s) del/los paquete(s) y el siguiente paso:
    - `/clarify <slug>` si todavía hay ambigüedad real que entrevistar, o
    - `/implement <slug>` directo si el plan ya está cerrado (o `/resume <slug>` para
-     que una sesión fresca reconstruya contexto primero).
+     que una sesión fresca reconstruya contexto primero), o
+   - `/implement --delegate <slug>` para delegar **un** slug a un subagente fresco
+     desde esta sesión, o `/dispatch` para orquestar una oleada de slugs paralelos.
 
 ## Plantillas de los archivos
 
@@ -131,6 +173,11 @@ escrito hace N commits" en vez de confiar en un mapa viejo.
 - **Goal** y **non-goals / scope**.
 - **Source plan**: la ruta resuelta en el paso 1 (puede ser `~/.claude/plans/`, un
   draft del repo, una ruta pasada, o "authored in place by /plan").
+- **Task card(s)**: la metadata de routing del Task Map (paso 2), con el schema de
+  `AGENTS.md` (`Dificultad` / `Modelo recomendado` / `Effort recomendado` + objetivo,
+  archivos, deps, criterios, riesgos). Un card por paso ordenado (slug acoplado) o uno
+  al inicio con `**Slug:**` (slug paralelo). `/dispatch` e `/implement --delegate` lo
+  leen para rutear el modelo; no toca el esquema del INDEX.
 - **Ordered steps**, cada uno concreto como para ejecutar.
 - **Verification** (obligatorio, no prosa): el/los comando(s) copy-pasteables que el
   implementador corre para probar que el trabajo está hecho, más la **señal
