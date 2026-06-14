@@ -6,7 +6,7 @@
     {
       "name": "handoff-kit",
       "source": "./",
-      "description": "File-based handoffs between a planning agent (Opus) and an implementer (Codex or a fresh Claude). Ships the /plan /clarify /handoff /resume /implement /dispatch /archive /handoff-init commands plus optional enforcement hooks."
+      "description": "File-based handoffs between a planning agent (Opus) and an implementer (Codex or a fresh Claude). Ships the /plan /clarify /resume /implement /dispatch /archive /handoff-init commands plus optional enforcement hooks."
     },
     {
       "name": "handoff-kit-django",

@@ -5,8 +5,9 @@ encontrado en la evaluación del workflow (2026-05-30). Implementalos de a uno;
 respetá las dependencias indicadas en cada plan.
 
 > Estos son **planes de mejora del kit**, no handoffs activos. Si querés
-> ejecutar uno con el propio flujo del kit, pasalo por `/clarify`/`/handoff` y
-> convertilo en un slug bajo `docs/handoff/<slug>/`.
+> ejecutar uno con el propio flujo del kit, pasalo por `/plan` (opcionalmente
+> `/plan <slug> <ruta-al-plan>` para ingerir el draft) y convertilo en un slug
+> bajo `docs/handoff/<slug>/`.
 
 ## Orden sugerido
 

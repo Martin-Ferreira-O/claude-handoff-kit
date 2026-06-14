@@ -1,7 +1,7 @@
 ---
-description: Execute a docs/handoff/<slug>/ plan, updating PROGRESS.md and DECISIONS.md as you go
-argument-hint: [task-slug]
-allowed-tools: Read, Write, Edit, Bash
+description: Execute a docs/handoff/<slug>/ plan, updating PROGRESS.md and DECISIONS.md as you go (opt-in --delegate runs it in one fresh subagent)
+argument-hint: [--delegate] [task-slug]
+allowed-tools: Read, Write, Edit, Bash, Agent
 ---
 
 # Implement
@@ -12,7 +12,42 @@ by step, keeps `PROGRESS.md` honest, and surfaces anything that diverges from
 the spec in `DECISIONS.md`. **You are the implementing agent**; `PLAN.md` is the
 spec authored by Opus — implement against it and do not silently diverge.
 
-Target handoff (optional slug): `$ARGUMENTS`
+Arguments (optional `--delegate` flag + optional slug): `$ARGUMENTS`
+
+## Execution mode: in-session (default) vs. `--delegate` (opt-in)
+
+By default `/implement` runs **in-session**: you are the implementer and you execute the
+steps below, sequentially, one commit per verified step. **That mode does not change.**
+
+`--delegate` is an **opt-in, Claude-only** mode (like `/dispatch`): instead of
+implementing yourself, the current session acts as **orchestrator/reviewer** and delegates
+the slug to **one** fresh subagent — killing the "open another terminal" friction without
+losing the clean context a separate implementer gives you. If invoked as
+`/implement --delegate <slug>`:
+
+1. **Resolve the slug and read its Task card** (`PLAN.md`) → `Modelo recomendado` /
+   `Effort recomendado` (card schema in `AGENTS.md`, routing table in `docs/routing.md`).
+2. **Launch one (1) fresh subagent** via `Agent`: `subagent_type: "general-purpose"`,
+   `model:` routed from the card (**"Opus 4.8" → `opus`**, **"Sonnet" → `sonnet`**;
+   default `sonnet` when there's no readable card), with the **`Effort recomendado` passed
+   as prompt guidance** ("maximum / exhaustive reasoning" for `max`; "direct, no
+   over-analysis" for `low`). The prompt: run **`/implement <slug>`** (the default,
+   in-session mode) following the kit contract — PLAN as spec, PROGRESS/DECISIONS kept
+   current, the verification gate, one commit per verified step, **do not push**. The
+   subagent starts with **clean context** — it does not inherit your planning/orchestration
+   session.
+   - **One slug, one branch → no worktree.** Worktree isolation belongs to `/dispatch`
+     (many slugs in parallel); `--delegate` runs a single slug on the current branch.
+3. **When the subagent returns, you run the fresh-context review gate** (step 9) over the
+   diff vs `PLAN.md`. Because the implementer was the subagent and you did not inherit its
+   implementation context, this review **is** genuinely separate context → record it as
+   `review (fresh)`.
+
+`--delegate` requires `Agent` in `allowed-tools` (already included, **gated**: the
+unrestricted `Bash` stays the only broad concession; `Agent` is used only in this mode,
+Claude-only — a Codex user ignores it and runs the in-session mode). The rest of this guide
+(steps 1-10) is the in-session mode that the subagent — or you, without `--delegate` —
+executes.
 
 ## Steps
 
@@ -114,6 +149,15 @@ Target handoff (optional slug): `$ARGUMENTS`
      **subagent** (clean context window); on Codex or another agent, start a clean
      session seeded with just those two inputs. This is the real fresh-context
      gate — use it whenever a subagent/clean session is available.
+     - **Route the reviewer's model by the slug's difficulty** — the **same routing
+       table** as the implementer (`docs/routing.md`). Read `Dificultad` /
+       `Modelo recomendado` from the slug's Task card and spawn the review subagent
+       with: **8-10 → Opus 4.8 max**, **4-7 → Opus 4.8 medium**, **1-3 → Sonnet**
+       (default Sonnet if there's no readable card). This replaces a fixed reviewer
+       model: a high-difficulty change earns a high-capability reviewer; a mechanical
+       one stays cheap. (The Django specialized reviewers below run on `sonnet` and are
+       chosen by *file type*, an orthogonal axis — pick the specialist when the diff
+       fits one, else route the generic reviewer's model by difficulty.)
      - **Django repos with the optional Django layer installed** (the
        `handoff-kit-django` plugin / `--with-django` install — its
        `python-reviewer`, `security-reviewer`, `database-reviewer` subagents are

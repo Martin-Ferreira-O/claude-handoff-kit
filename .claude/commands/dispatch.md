@@ -48,15 +48,27 @@ Concurrencia (opcional): `$ARGUMENTS` (ej. `--max 2`). Default conservador: **2*
    `todo`, es porque sus deps están `blocked`/`in-progress` — reportá el estado y
    parar (no hay nada que lanzar todavía).
 
-4. **Fan-out con cap de concurrencia.** Lanzá hasta `--max N` (default 2) slugs de
-   la oleada lista, cada uno como subagente **background** y **aislado**:
+4. **Fan-out con cap de concurrencia + routing de modelo.** Lanzá hasta `--max N`
+   (default 2) slugs de la oleada lista, cada uno como subagente **background** y
+   **aislado**. Antes de lanzar cada uno, **ruteá el modelo por su Task card**:
+   - **Leé el `Modelo recomendado` del Task card** del slug (vive en su `PLAN.md` —
+     ver el schema en `AGENTS.md` y la tabla en `docs/routing.md`):
+     `grep -A2 -e 'Modelo recomendado' -e 'Dificultad' docs/handoff/<slug>/PLAN.md`.
+     Traducí al parámetro `model` del `Agent`: **"Opus 4.8" → `model: "opus"`**,
+     **"Sonnet" → `model: "sonnet"`**. **Default `sonnet`** si el slug no tiene card
+     legible (retrocompat con slugs viejos; tolerá tanto `Modelo recomendado:` como un
+     `Modelo:` pelado).
    - `Agent` con `run_in_background: true`, `isolation: "worktree"` (cada slug en su
      propio worktree → commitea en su rama sin pisar el working tree de otro),
-     `subagent_type: "general-purpose"` y `model: "sonnet"` (implementadores en
-     Sonnet por costo; el planning Opus ya quedó hecho en el PLAN).
+     `subagent_type: "general-purpose"` y el **`model` ruteado arriba** — ya **no** un
+     `model: "sonnet"` fijo: el planning Opus quedó en el PLAN, pero un slug 8-10 se
+     **implementa** con Opus según su card (ver `docs/routing.md`).
    - `prompt`: que ejecute `/implement <slug>` siguiendo el contrato del kit
      (PLAN como spec, PROGRESS/DECISIONS al día, gate de verificación, un commit
-     por paso verificado, **no pushear**).
+     por paso verificado, **no pushear**). Incluí el **`Effort recomendado`** del card
+     como **guía en el prompt** ("razonamiento máximo / exhaustivo" para `max`;
+     "directo, sin sobre-análisis" para `low`) — el effort no es un dial del harness,
+     se transmite por prompt.
    - Registrá cada lanzamiento con `TaskCreate` para trackearlo.
    - Antes de lanzar, marcá la fila del slug en INDEX como `in-progress` (`Edit`,
      actualizá `updated`). Si hay más slugs listos que `N`, los sobrantes esperan a
@@ -88,8 +100,9 @@ Concurrencia (opcional): `$ARGUMENTS` (ej. `--max 2`). Default conservador: **2*
 
 - **Claude-only y opt-in.** El core maneja un slug a la vez sin `/dispatch`. No
   metas dependencia de orquestación en los comandos portables.
-- **Cap conservador por costo.** N agentes en paralelo es caro; default 2,
-  implementadores en Sonnet. Subí `--max` solo si el usuario lo pide.
+- **Cap conservador por costo.** N agentes en paralelo es caro; default 2, con el
+  **modelo ruteado por el Task card** de cada slug (default Sonnet si no hay card —
+  ver `docs/routing.md`). Subí `--max` solo si el usuario lo pide.
 - **Nunca auto-merge a `main`.** El merge entre oleadas siempre pasa por
   confirmación del usuario.
 - **Cada subagente es un implementador del kit.** Respeta PLAN/PROGRESS/DECISIONS

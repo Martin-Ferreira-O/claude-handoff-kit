@@ -69,7 +69,7 @@ write outside it.
 6. **Report.** Summarize what was created / appended / refreshed / skipped (one
    line each), then the next step: `/plan <task>` to start the cycle, or for a
    one-sentence change, implement directly. Mention that the registry is empty and
-   the first `/handoff` will seed a row.
+   the first `/plan` will seed a row.
 
 ## Notes
 
