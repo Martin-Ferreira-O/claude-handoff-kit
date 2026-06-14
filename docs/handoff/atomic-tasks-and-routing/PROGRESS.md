@@ -9,10 +9,17 @@
 - [x] TASK-01. Contrato de tarea atómica + rúbrica de routing (`AGENTS.md`, `docs/routing.md`)
 - [x] TASK-02. `/plan` emite tareas atómicas + decompone en slugs (`plan.md`)
 - [x] TASK-03. Routing dinámico en `/dispatch` (`dispatch.md`)
-- [ ] TASK-04. `/implement --delegate` opt-in + `Agent` en allowed-tools (`implement.md`)
+- [x] TASK-04. `/implement --delegate` opt-in + `Agent` en allowed-tools (`implement.md`)
 - [ ] TASK-05. Documentación y ejemplos (`CLAUDE.md`, `docs/orchestration.md`, `README.md`)
 
 ## Work log
+- 2026-06-14 16:46 — Claude Opus 4.8 (implementer) — TASK-04: `implement.md` — `Agent`
+  sumado a `allowed-tools` (gated, Claude-only); `argument-hint` → `[--delegate] [task-slug]`.
+  Nueva sección **Execution mode** documentando `--delegate` (1 subagente fresco con modelo
+  ruteado por card, sin worktree, sesión principal = orquestador/reviewer → `review (fresh)`).
+  Gate de review (paso 9): el **reviewer se rutea por dificultad** (8-10 Opus max / 4-7 Opus
+  medium / 1-3 Sonnet), ortogonal a los reviewers Django por tipo de archivo. Modo default
+  intacto. Verify: `grep -- '--delegate'` y `grep 'allowed-tools:.*Agent'` → matches. ✔
 - 2026-06-14 16:44 — Claude Opus 4.8 (implementer) — TASK-03: `dispatch.md` paso 4 ahora
   **rutea el modelo por Task card** (lee `Modelo recomendado` → `model: opus`/`sonnet`,
   default `sonnet` sin card, tolera `Modelo:` pelado), en vez del `model: "sonnet"` fijo;
