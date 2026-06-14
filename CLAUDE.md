@@ -13,21 +13,24 @@ específica para Claude/Opus como autor del spec.
 ## El ciclo
 
 ```
-/plan → /clarify → /handoff → /resume → /implement → /code-review
+/plan → /clarify → /resume → /implement → /code-review
 ```
 
-- **/plan** — Opus arranca el ciclo: crea la rama de tarea (para no trabajar en
-  `main`), conduce el planning y escribe un draft en `~/.claude/plans/<slug>.md`
-  con bloque **Verification**, y lo pasa por una **auto-crítica** antes del
-  handoff. Es **opcional**: corre **fuera** del plan mode nativo (que es
-  read-only y no puede ramificar) y no duplica `/clarify` — ante ambigüedad real,
-  deriva a él. Codex puede saltárselo y traer su propio plan.
+- **/plan** — Opus arranca el ciclo y lo materializa de una: crea la rama de tarea
+  (para no trabajar en `main`), conduce el planning, lo pasa por una
+  **auto-crítica**, y **escribe el paquete de handoff** en `docs/handoff/<slug>/`
+  (CONTEXT, PLAN, PROGRESS, DECISIONS) con bloque **Verification**, deriva `.verify`
+  y siembra la fila en `INDEX.md`. **Absorbió a `/handoff`**: ya no hay un segundo
+  comando que re-derive contexto. Es **opcional**: corre **fuera** del plan mode
+  nativo (que es read-only y no puede ramificar ni escribir el paquete) y no duplica
+  `/clarify` — ante ambigüedad real, deriva a él. Otro agente puede saltárselo y
+  traer su propio draft, pasándolo como segundo argumento (`/plan <slug> <path>`)
+  para que `/plan` lo empaquete, o materializando el paquete a mano según `AGENTS.md`.
 - **/clarify** — Opus entrevista al usuario (`AskUserQuestion`) sobre las partes
-  difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas en el
-  Goal/Non-goals del plan **antes** del handoff. Es **opcional**: si el cambio
-  cabe en una sola frase, saltá `/clarify` y `/handoff` y hacelo directo.
-- **/handoff** — Opus vuelca contexto + spec en `docs/handoff/<slug>/`
-  (CONTEXT, PLAN, PROGRESS, DECISIONS) y registra el slug en `INDEX.md`.
+  difíciles (bordes, límites de alcance, tradeoffs) y vuelca las respuestas
+  **directo en el `PLAN.md` del paquete** (Goal/Non-goals + sección *Clarifications*).
+  Corre **después** de `/plan`, sobre el paquete ya creado. Es **opcional**: si el
+  cambio cabe en una sola frase, saltá `/clarify` y hacelo directo.
 - **/resume** — reconstruye contexto y hace el briefing; **no implementa**.
 - **/implement** — ejecuta `PLAN.md` paso a paso, con un commit atómico por
   paso verificado (código + actualizaciones de PROGRESS/DECISIONS juntos). Antes
@@ -52,9 +55,12 @@ específica para Claude/Opus como autor del spec.
   `DECISIONS.md` (sección *Open questions for the spec author*); nunca edita el
   plan en silencio. Esta es la regla que evita que el harness derive.
 
-## Cuándo hacer handoff
+## Cuándo materializar (o actualizar) el paquete
 
-- Te estás quedando sin contexto/tokens en una tarea larga.
+El paquete lo crea `/plan` desde el arranque del ciclo. Que exista (y mantenerlo al
+día) importa sobre todo cuando:
+
+- Te estás quedando sin contexto/tokens en una tarea larga y otra sesión la continúa.
 - Vas a delegar la ejecución a Codex u otro agente.
 - Querés paralelizar varios slugs en paralelo.
 

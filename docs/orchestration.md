@@ -1,7 +1,7 @@
 # Orquestación de slugs en paralelo (Claude-only)
 
 > **El kit funciona sin esto.** El core maneja **un slug a la vez** con
-> `/handoff → /resume → /implement`. `/dispatch` es una capa **opt-in y Claude-only**
+> `/plan → /resume → /implement`. `/dispatch` es una capa **opt-in y Claude-only**
 > para lanzar varios slugs a la vez — usa primitivos de Claude Code (`Agent` con
 > `isolation: "worktree"`, `TaskCreate`) que no son parte del contrato portable.
 > Un usuario de Codex lo ignora por completo.

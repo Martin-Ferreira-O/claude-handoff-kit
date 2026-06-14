@@ -19,3 +19,4 @@ append a duplicate. The table is both human-readable and machine-parseable
 | slug | status | depends-on | updated | note |
 |---|---|---|---|---|
 | harden-handoff-kit | done | — | 2026-05-30 | archived — 6/6 steps implemented & committed |
+| plan-absorbs-handoff | done | — | 2026-06-14 | /plan absorbed /handoff; 7/7 steps, structural verify passed |

@@ -15,7 +15,7 @@ where the last one left off, without trusting a stale summary.
 ## The cycle
 
 ```
-/plan → /clarify → /handoff → (/resume) → /implement → /code-review
+/plan → /clarify → (/resume) → /implement → /code-review
 ```
 
 The arrows are a **recommended flow, not technical dependencies** — every command
@@ -24,9 +24,8 @@ any point and skip the steps you don't need.
 
 | Command | Who runs it | What it does |
 |---|---|---|
-| **`/plan`** | Opus | The formal entry point: creates the task branch (so you avoid working on `main`), drives the planning, writes a draft to `~/.claude/plans/<slug>.md` with a runnable **Verification** block, and runs a self-critique pass over it. Optional, and tool-agnostic — Codex can skip it and bring its own plan. |
-| **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers into the plan **before** the handoff. Optional: skip it for one-sentence changes. |
-| **`/handoff`** | Opus | Dumps context + spec into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) and registers the slug in `INDEX.md`. |
+| **`/plan`** | Opus | The single entry point: creates the task branch (so you avoid working on `main`), drives the planning, runs a self-critique pass, and **writes the whole handoff package** into `docs/handoff/<slug>/` (`CONTEXT`, `PLAN`, `PROGRESS`, `DECISIONS`) with a runnable **Verification** block, derives `.verify`, and seeds the `INDEX.md` row. **Absorbed `/handoff`** — no second, context-rederiving step. Optional and tool-agnostic: another agent can bring its own draft via `/plan <slug> <path>`. |
+| **`/clarify`** | Opus | Interviews the user (`AskUserQuestion`) on the hard parts — edges, scope boundaries, tradeoffs — and folds the answers **directly into the package `PLAN.md`** (runs after `/plan`). Optional: skip it for one-sentence changes. |
 | **`/resume`** | any agent | **Optional, read-only briefing.** Rebuilds context and reports where the task stands — then **stops, does not implement**. |
 | **`/implement`** | implementer | Executes `PLAN.md` step by step — one atomic commit per verified step — then runs a fresh-context review gate against the plan. **Re-derives context itself**, so `/resume` is not a prerequisite. |
 | **`/code-review`** | any agent | The adversarial gate: does the diff satisfy every requirement in `PLAN.md`? |
@@ -220,7 +219,7 @@ claude plugin install handoff-kit@claude-handoff-kit
 
 `handoff-kit@claude-handoff-kit` reads as `<plugin>@<marketplace>`. The first time
 you add a marketplace Claude Code asks you to trust it; after installing, the
-`/plan · /clarify · /handoff · /resume · /implement · /dispatch · /archive ·
+`/plan · /clarify · /resume · /implement · /dispatch · /archive ·
 /handoff-init` commands are available with **no files copied** into your project,
 and the optional enforcement hooks are wired (and stay inert until you opt in —
 see [the hooks section](#optional-enforcement-layer-claude-only)).
@@ -272,10 +271,9 @@ the cycle.
 
 ## Using it
 
-1. Run **`/plan <task>`** with Opus to branch and draft the spec, then
-   **`/clarify`** to pin down the edges.
-2. **`/handoff <slug>`** to write the package.
-3. Hand the slug to your implementer — a fresh Claude or Codex — and run
+1. Run **`/plan <task>`** with Opus to branch, draft the spec, **and write the
+   handoff package** — then **`/clarify`** to pin down the edges in place.
+2. Hand the slug to your implementer — a fresh Claude or Codex — and run
    **`/resume <slug>`** to rebuild context, then **`/implement <slug>`** to do
    the work.
-4. (Optional) Wire the hooks from `docs/hooks.md` for deterministic enforcement.
+3. (Optional) Wire the hooks from `docs/hooks.md` for deterministic enforcement.

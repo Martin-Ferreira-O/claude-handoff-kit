@@ -9,8 +9,8 @@ La regla practica:
 - Si tu proyecto personal ya tiene `CLAUDE.md`, conserva primero sus reglas de
   dominio, arquitectura, comandos, estilo y testing.
 - Agrega de este archivo solo las secciones que mejoren el flujo con agentes.
-- Si copiaste los slash commands de handoff (`/plan`, `/clarify`, `/handoff`,
-  `/resume`, `/implement`, `/code-review`), agrega tambien la seccion "Handoff".
+- Si copiaste los slash commands de handoff (`/plan`, `/clarify`, `/resume`,
+  `/implement`, `/code-review`), agrega tambien la seccion "Handoff".
   (`/dispatch` y `/archive` son extras avanzados —paralelizacion y archivado—:
   copialos solo si los vas a usar, ver seccion 4.)
 - No copies texto que describa a `claude-handoff-kit` como producto; eso solo
