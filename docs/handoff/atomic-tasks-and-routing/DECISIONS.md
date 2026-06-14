@@ -25,6 +25,19 @@
   archivos de comando actuales que este spec referencia. Si se mergea a `main` antes que este
   slug, rebasar es trivial.
 
+## Notas del implementador (no bloquean)
+- **TASK-01 — label canónico del card = `Modelo recomendado:` / `Effort recomendado:`**
+  (siguiendo §6 del source plan, que el PLAN marca normativo). Observación: los Task
+  cards de **este** PLAN.md abrevian a `**Modelo:**` / `**Effort:**`, que **no** matchean
+  `grep 'Modelo recomendado'`. No lo edito (solo Opus reescribe PLAN.md). Lo resuelvo del
+  lado del parser: en TASK-03 `/dispatch` matchea `Modelo recomendado` **o** un `Modelo`
+  pelado, con default Sonnet — así el dogfooding rutea igual. Si Opus prefiere
+  estandarizar las etiquetas del PLAN, es un cambio de prosa trivial.
+- **Baseline commit del paquete.** El paquete de handoff estaba sin commitear (lo
+  materializó `/plan` pero quedó untracked). Lo committeé como baseline (`CONTEXT`/`PLAN`/
+  `DECISIONS`) antes de TASK-01 para que los commits de paso referencien un PLAN en
+  historia. Sin impacto en el spec.
+
 ## Open questions for the spec author
 *(Resueltas por Opus únicamente; el implementador no las adivina ni edita el PLAN.)*
 

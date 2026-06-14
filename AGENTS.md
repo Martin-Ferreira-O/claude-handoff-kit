@@ -18,3 +18,33 @@ Active task handoffs live in `docs/handoff/<slug>/`, each containing `CONTEXT.md
 - **Record any deviation from `PLAN.md`, decision, or blocker in `DECISIONS.md`** before continuing, so the spec author can review it. Put questions that need the author's input under "Open questions for the spec author".
 - **The back-channel is a loop, not a dead letter.** Open *Open questions for the spec author* are resolved by **Opus only** — the implementer must not guess past them or edit `PLAN.md`. `/resume` surfaces them as a decision queue for the planner to answer and fold back into the plan.
 - **Keep the four files consistent with each other.** When reconciling, also check the package against itself: PROGRESS checkboxes must match PLAN steps, DECISIONS must not contradict PLAN, and the banner's provenance SHA flags how far the spec lags `HEAD`. Surface internal drift before resuming work on it.
+
+## Atomic tasks & model routing (Task card)
+
+A handoff's `PLAN.md` carries one **Task card** per atomic task — a small metadata block (right after the **Goal** or per ordered step) that makes each task's size, risk, and routing explicit. `/plan` scores and emits the cards; `/dispatch` and `/implement --delegate` read them to route the implementer's (and the review gate's) model. The card lives in the `PLAN.md` prose and is parseable with `grep` — **the `INDEX.md` table schema does not change**; model/effort live in the card, never in new columns.
+
+**Card schema** (fields in order; Spanish labels, matching the dogfooded cards):
+
+```md
+### TASK-03 — <título corto>
+- **Objetivo:** <una frase: qué logra>
+- **Archivos:** <paths que toca>
+- **Depende de:** <TASK-id(s) o —>
+- **Dificultad:** <1-10>/10 · **Modelo recomendado:** <Sonnet 4.6 | Opus 4.8> · **Effort recomendado:** <low | medium | max>
+- **Motivo:** <por qué esa dificultad/modelo, una frase>
+- **Criterios de éxito:**
+  - [ ] <criterio verificable por comando>
+- **Riesgos:** <qué puede romper>
+```
+
+When a card *is* its own slug (a parallel-slug decomposition) it also carries a `**Slug:**` line naming the `docs/handoff/<slug>/` folder; when several cards are the ordered steps of one coupled slug, the `TASK-id` is enough. The `Dificultad · Modelo recomendado · Effort recomendado` line may be split into three bullets — what matters is that the `**Modelo recomendado:**` and `**Dificultad:**` labels are present and `grep`-able.
+
+**Routing.** `Dificultad` (1-10) maps to `Modelo recomendado` / `Effort recomendado` via a shared rubric:
+
+| Dificultad | Modelo recomendado | Effort |
+|---|---|---|
+| 1-3 | Sonnet 4.6 | low / medium |
+| 4-7 | Opus 4.8 | medium |
+| 8-10 | Opus 4.8 | max |
+
+The full **5-axis difficulty rubric** and the routing mechanics live in [`docs/routing.md`](docs/routing.md) — the source of truth both `/plan` and `/dispatch` cite. `/dispatch` defaults to `sonnet` when a slug has no readable card (back-compat with older slugs); `effort` is transmitted as prompt guidance, not a harness dial.

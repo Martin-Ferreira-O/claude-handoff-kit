@@ -20,3 +20,4 @@ append a duplicate. The table is both human-readable and machine-parseable
 |---|---|---|---|---|
 | harden-handoff-kit | done | — | 2026-05-30 | archived — 6/6 steps implemented & committed |
 | plan-absorbs-handoff | done | — | 2026-06-14 | /plan absorbed /handoff; 7/7 steps, structural verify passed |
+| atomic-tasks-and-routing | in-progress | — | 2026-06-14 | TASK-01 done (Task card contract + docs/routing.md); TASK-02..05 pending |
