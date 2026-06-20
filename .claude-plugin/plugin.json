@@ -16,6 +16,5 @@
     "./.claude/commands/dispatch.md",
     "./.claude/commands/archive.md",
     "./.claude/commands/handoff-init.md"
-  ],
-  "hooks": "./hooks/hooks.json"
+  ]
 }
