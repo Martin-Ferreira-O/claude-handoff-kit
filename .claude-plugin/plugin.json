@@ -10,7 +10,6 @@
   "commands": [
     "./.claude/commands/plan.md",
     "./.claude/commands/clarify.md",
-    "./.claude/commands/handoff.md",
     "./.claude/commands/resume.md",
     "./.claude/commands/implement.md",
     "./.claude/commands/dispatch.md",

@@ -1,7 +1,7 @@
 # Optional enforcement layer (Claude-only)
 
 > **The kit works fully without anything in this file.** The portable Markdown
-> commands (`/clarify`, `/handoff`, `/resume`, `/implement`) drive Codex *and*
+> commands (`/plan`, `/clarify`, `/resume`, `/implement`) drive Codex *and*
 > Claude *and* any future agent with no hooks at all. This layer is a
 > **belt-and-suspenders** add-on for Claude Code sessions only: it turns two of
 > the kit's advisory rules into deterministic, enforced ones — the kind of
@@ -79,19 +79,19 @@ exits 0 — it won't trap you in a verification loop over a turn that changed
 nothing. Since `/implement` commits one verified step at a time, a clean tree also
 means the last commit already cleared this gate.
 
-**`.verify` is generated, not hand-rolled.** `/handoff` derives it from the PLAN
-**Verification** block: when that block is one runnable command, `/handoff` writes
+**`.verify` is generated, not hand-rolled.** `/plan` derives it from the PLAN
+**Verification** block: when that block is one runnable command, `/plan` writes
 that command to `docs/handoff/<slug>/.verify`; `/implement` keeps it in sync (it
 regenerates a stale `.verify` during its consistency check). The PLAN stays the
 single source of truth — `.verify` is just a projection of it, so **edit the PLAN
-Verification, not `.verify`**; the next `/handoff` or `/implement` reprojects it.
+Verification, not `.verify`**; the next `/plan` or `/implement` reprojects it.
 If you ever need to set it by hand, it is a single line — the command only:
 ```sh
 echo '.venv/bin/python manage.py test billing' > docs/handoff/<slug>/.verify
 ```
 
 **Single-command assumption.** The gate runs one command. If your PLAN
-Verification block needs several, `/handoff` deliberately leaves `.verify`
+Verification block needs several, `/plan` deliberately leaves `.verify`
 uncreated (it won't invent a multi-command format) and the gate stays inactive.
 Wrap the commands in a script and point `.verify` at it — or, per the kit's own
 guidance, **pause and ask the spec author** how to express the pass signal.

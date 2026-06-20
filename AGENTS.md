@@ -3,13 +3,13 @@
 ## Handoff & Shared State
 Active task handoffs live in `docs/handoff/<slug>/`, each containing `CONTEXT.md`, `PLAN.md`, `PROGRESS.md`, and `DECISIONS.md`. `docs/handoff/INDEX.md` registers them.
 
-`INDEX.md` is a markdown table, **one row per slug**, both human-readable and machine-parseable (`awk -F'|'` / `grep`): `| slug | status | depends-on | updated | note |`. `status` ∈ {`todo`, `in-progress`, `blocked`, `done`}; `depends-on` is a comma-separated list of slugs that must be `done` first (or `—`). `/handoff` seeds the row, `/implement` advances its `status`, `/resume` reads it. Update the existing row — never append a duplicate.
+`INDEX.md` is a markdown table, **one row per slug**, both human-readable and machine-parseable (`awk -F'|'` / `grep`): `| slug | status | depends-on | updated | note |`. `status` ∈ {`todo`, `in-progress`, `blocked`, `done`}; `depends-on` is a comma-separated list of slugs that must be `done` first (or `—`). `/plan` seeds the row, `/implement` advances its `status`, `/resume` reads it. Update the existing row — never append a duplicate.
 
 **Archiving finished slugs.** A `done` slug stays useful as history but should stop competing with live work. `/archive <slug>` retires it by `git mv`-ing the package into `docs/handoff/_archive/<slug>/` and marking its INDEX row archived (status stays `done`; the `note` is prefixed `archived`). This is **manual and explicit — never automatic, never a delete**: the record is the point. The `_archive/` location is one level deeper than the "most recently touched" heuristic glob (`docs/handoff/*/PROGRESS.md`, used by `/resume`, `/implement`, and the Stop hook) reaches, so archived slugs drop out of it automatically without changing any glob. Only archive a slug whose INDEX status is `done` and whose PROGRESS agrees — finish or unblock live work first.
 
 **One branch per slug, created as early as possible.** Each slug gets its own task branch, created at the *start* of the cycle (`/plan` branches from `main`/`master`) rather than at `/implement` time. This is a pre-requisite for parallel slugs: the optional Stop hook resolves the slug from the current branch, and `/dispatch` worktrees need a distinct branch per slug. Host-project prefixes are allowed (e.g. `feat/<slug>`) as long as the slug is derivable from the suffix. `/implement`'s branch step is an **idempotent safety net** — it creates the branch only if you're still on the default branch, and is a no-op once you're on the slug's branch.
 
-**The "source plan" is any agreed plan draft, not a Claude-only artifact.** `/clarify` and `/handoff` translate a source plan into the handoff package; that source can be `~/.claude/plans/<slug>.md` (written by Claude Code's plan mode), a draft inside the repo (e.g. `docs/plans/<slug>.md`), or an explicit path passed as an argument. The kit is tool-agnostic at the *entry point* too: a non-Claude planner can author the source plan anywhere. Whichever path is used is recorded in the banner's provenance line (`source plan: <path>`), so the implementer can trace the spec back to its origin.
+**The "source plan" is any agreed plan draft, not a Claude-only artifact.** `/plan` materializes the handoff package — either authoring `PLAN.md` in place or ingesting an existing source plan — and `/clarify` then refines it. That source can be `~/.claude/plans/<slug>.md` (written by Claude Code's plan mode), a draft inside the repo (e.g. `docs/plans/<slug>.md`), or an explicit path passed to `/plan` as its second argument. The kit is tool-agnostic at the *entry point* too: a non-Claude planner can author the source plan anywhere and pass it to `/plan`, or hand-author the four files per this contract directly. Whichever path is used is recorded in the banner's provenance line (`source plan: <path>`, or `authored in place by /plan`), so the implementer can trace the spec back to its origin.
 
 - **Before starting work on a task, read its handoff folder** (CONTEXT → PLAN → PROGRESS → DECISIONS). `PLAN.md` is the spec authored by the planning agent — implement against it and do not silently diverge.
 - **Re-derive, don't just recall.** Open the files listed under CONTEXT's *Read first* and confirm they still match the spec before trusting its summary; the banner's provenance line (planner model + source plan path + commit SHA the spec was written against) tells you where the spec came from and how stale the map may be.
@@ -18,3 +18,33 @@ Active task handoffs live in `docs/handoff/<slug>/`, each containing `CONTEXT.md
 - **Record any deviation from `PLAN.md`, decision, or blocker in `DECISIONS.md`** before continuing, so the spec author can review it. Put questions that need the author's input under "Open questions for the spec author".
 - **The back-channel is a loop, not a dead letter.** Open *Open questions for the spec author* are resolved by **Opus only** — the implementer must not guess past them or edit `PLAN.md`. `/resume` surfaces them as a decision queue for the planner to answer and fold back into the plan.
 - **Keep the four files consistent with each other.** When reconciling, also check the package against itself: PROGRESS checkboxes must match PLAN steps, DECISIONS must not contradict PLAN, and the banner's provenance SHA flags how far the spec lags `HEAD`. Surface internal drift before resuming work on it.
+
+## Atomic tasks & model routing (Task card)
+
+A handoff's `PLAN.md` carries one **Task card** per atomic task — a small metadata block (right after the **Goal** or per ordered step) that makes each task's size, risk, and routing explicit. `/plan` scores and emits the cards; `/dispatch` and `/implement --delegate` read them to route the implementer's (and the review gate's) model. The card lives in the `PLAN.md` prose and is parseable with `grep` — **the `INDEX.md` table schema does not change**; model/effort live in the card, never in new columns.
+
+**Card schema** (fields in order; Spanish labels, matching the dogfooded cards):
+
+```md
+### TASK-03 — <título corto>
+- **Objetivo:** <una frase: qué logra>
+- **Archivos:** <paths que toca>
+- **Depende de:** <TASK-id(s) o —>
+- **Dificultad:** <1-10>/10 · **Modelo recomendado:** <Sonnet 4.6 | Opus 4.8> · **Effort recomendado:** <low | medium | max>
+- **Motivo:** <por qué esa dificultad/modelo, una frase>
+- **Criterios de éxito:**
+  - [ ] <criterio verificable por comando>
+- **Riesgos:** <qué puede romper>
+```
+
+When a card *is* its own slug (a parallel-slug decomposition) it also carries a `**Slug:**` line naming the `docs/handoff/<slug>/` folder; when several cards are the ordered steps of one coupled slug, the `TASK-id` is enough. The `Dificultad · Modelo recomendado · Effort recomendado` line may be split into three bullets — what matters is that the `**Modelo recomendado:**` and `**Dificultad:**` labels are present and `grep`-able.
+
+**Routing.** `Dificultad` (1-10) maps to `Modelo recomendado` / `Effort recomendado` via a shared rubric:
+
+| Dificultad | Modelo recomendado | Effort |
+|---|---|---|
+| 1-3 | Sonnet 4.6 | low / medium |
+| 4-7 | Opus 4.8 | medium |
+| 8-10 | Opus 4.8 | max |
+
+The full **5-axis difficulty rubric** and the routing mechanics live in [`docs/routing.md`](docs/routing.md) — the source of truth both `/plan` and `/dispatch` cite. `/dispatch` defaults to `sonnet` when a slug has no readable card (back-compat with older slugs); `effort` is transmitted as prompt guidance, not a harness dial.
